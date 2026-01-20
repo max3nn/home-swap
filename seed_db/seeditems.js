@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { it } from 'node:test';
 
 // Create itemSchema
 const itemSchema = new mongoose.Schema({
@@ -17,7 +18,7 @@ const itemSchema = new mongoose.Schema({
   },
   imageUrl: {
     type: String,
-    required: true,
+    required: false,
   },
   ownerId: {
     type: String,
@@ -34,7 +35,7 @@ const Item = mongoose.model('Item', itemSchema);
 const seedItems = async () => {
   const items = [
     {
-      itemId: new mongoose.Types.ObjectId().toString(),
+      itemId: 1,
       title: 'Makita Batteries',
       description:
         '4x Makita batteries. 18V. 2x 5.0Ah and 2x 2.0Ah in good condition.\nPrepared to swap for astronomy equipment, or Milwaukee batteries.',
@@ -44,30 +45,31 @@ const seedItems = async () => {
       itemType: 'tools',
     },
     {
-      itemId: new mongoose.Types.ObjectId().toString(),
+      itemId: 2,
       title: 'Pocket Lint',
       description:
         'A small collection of pocket lint from various trousers and jackets. Has absolutely no value but might be fun to swap for something equally useless.',
-      imageUrl: '',
       ownerId: 2,
     },
     {
-      itemId: new mongoose.Types.ObjectId().toString(),
+      itemId: 3,
       title: 'Candlesticks',
       description:
         'A pair of vintage brass candlesticks. Perfect for adding a touch of elegance to any room. Willing to swap for clothes, or kitchen knives.',
       imageUrl:
         'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Unknown_artist_-_Candlesticks_-_1989.168_-_Cleveland_Museum_of_Art.jpg/640px-Unknown_artist_-_Candlesticks_-_1989.168_-_Cleveland_Museum_of_Art.jpg',
       ownerId: 3,
+      itemType: 'home decor',
     },
     {
-      itemId: new mongoose.Types.ObjectId().toString(),
+      itemId: 4,
       title: 'Kids balance bikes',
       description:
         'High quality kids balance bikes as pictured. Durable and safe for outdoor play. Looking to swap for indoor games, puzzles or books.',
       imageUrl:
         'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Kids_bikes_balance.jpg/640px-Kids_bikes_balance.jpg',
       ownerId: 4,
+      itemType: 'toys',
     },
   ];
   await Item.deleteMany({});
