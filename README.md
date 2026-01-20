@@ -60,6 +60,12 @@ npm run dev
 
 The application will be available at `http://localhost:3000`
 
+## Design System & Style Guide
+
+This project uses a modern, accessible, and clean design system, defined in `public/style.css`. The color palette features teal and coral as primary accents, with a full range of semantic and neutral colors for clarity and accessibility. Typography, spacing, buttons, forms, cards, and alert components are all styled for a consistent and user-friendly experience.
+
+A comprehensive style guide is available at [`views/styleguide.ejs`](src/views/styleguide.ejs). To preview all design elements and components, start the server and visit `/styleguide` in your browser. This page demonstrates the color palette, typography, buttons, form elements, cards, alerts, and utility classes in action.
+
 ## Development
 
 ### Available Scripts
