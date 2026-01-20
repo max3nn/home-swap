@@ -25,6 +25,10 @@ app.get('/', (req, res) => {
   res.render('home', { title: 'Home Swap Platform' });
 });
 
+// Auth routes
+const authRoutes = require('./routes/auth');
+app.use('/auth', authRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
