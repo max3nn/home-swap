@@ -1,0 +1,68 @@
+/* Custom styles for Home Swap Platform */
+
+body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+.card-title i {
+    vertical-align: middle;
+    margin-right: 0.5rem;
+}
+
+.brand-logo {
+    font-weight: 300;
+}
+
+/* Form styles */
+.input-field label {
+    color: #26a69a;
+}
+
+.input-field input[type=text]:focus + label,
+.input-field input[type=email]:focus + label,
+.input-field input[type=password]:focus + label {
+    color: #26a69a;
+}
+
+.input-field input[type=text]:focus,
+.input-field input[type=email]:focus,
+.input-field input[type=password]:focus {
+    border-bottom: 1px solid #26a69a;
+    box-shadow: 0 1px 0 0 #26a69a;
+}
+
+/* Button styles */
+.btn {
+    background-color: #26a69a;
+}
+
+.btn:hover {
+    background-color: #2bbbad;
+}
+
+/* Card styles */
+.card {
+    border-radius: 8px;
+}
+
+.card-panel {
+    border-radius: 8px;
+}
+
+/* Navigation styles */
+nav {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Footer styles */
+.page-footer {
+    margin-top: 2rem;
+}

@@ -1,0 +1,19 @@
+<div class="row">
+    <div class="col s12">
+        <div class="card-panel red lighten-2">
+            <h1 class="white-text center-align"><%= title %></h1>
+            <p class="white-text center-align flow-text">
+                <%= message %>
+            </p>
+            <% if (error && error.stack) { %>
+                <pre class="white-text"><%= error.stack %></pre>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col s12 center-align">
+        <a href="/" class="btn teal">Go Home</a>
+    </div>
+</div>
