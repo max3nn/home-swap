@@ -24,7 +24,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ### Seed a local database
 
-The project uses a MongoDB database that is seeded with the 4 main objects types:
+The project uses a MongoDB database (homeswapDB) that is seeded with the 4 main objects types:
 
 - Users
 - Items
