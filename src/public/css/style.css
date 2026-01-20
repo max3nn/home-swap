@@ -1,68 +1,361 @@
-/* Custom styles for Home Swap Platform */
+:root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --border: 214.3 31.8% 91.4%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --radius: 0.5rem;
+}
+
+* {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
 
 body {
-    display: flex;
-    min-height: 100vh;
-    flex-direction: column;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
 }
 
-main {
-    flex: 1 0 auto;
-    margin-top: 2rem;
-    margin-bottom: 2rem;
-}
-
-.card-title i {
-    vertical-align: middle;
-    margin-right: 0.5rem;
-}
-
-.brand-logo {
-    font-weight: 300;
-}
-
-/* Form styles */
-.input-field label {
-    color: #26a69a;
-}
-
-.input-field input[type=text]:focus + label,
-.input-field input[type=email]:focus + label,
-.input-field input[type=password]:focus + label {
-    color: #26a69a;
-}
-
-.input-field input[type=text]:focus,
-.input-field input[type=email]:focus,
-.input-field input[type=password]:focus {
-    border-bottom: 1px solid #26a69a;
-    box-shadow: 0 1px 0 0 #26a69a;
-}
-
-/* Button styles */
-.btn {
-    background-color: #26a69a;
-}
-
-.btn:hover {
-    background-color: #2bbbad;
-}
-
-/* Card styles */
-.card {
-    border-radius: 8px;
-}
-
-.card-panel {
-    border-radius: 8px;
-}
-
-/* Navigation styles */
 nav {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: hsl(var(--background));
+    border-bottom: 1px solid hsl(var(--border));
+    box-shadow: none;
+    height: 64px;
+    line-height: 64px;
 }
 
-/* Footer styles */
-.page-footer {
-    margin-top: 2rem;
+nav .brand-logo {
+    color: hsl(var(--foreground));
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+nav ul a {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+nav ul a:hover {
+    color: hsl(var(--foreground));
+    background-color: transparent;
+}
+
+.hero {
+    padding: 120px 0 80px;
+    background-color: hsl(var(--background));
+}
+
+.hero h1 {
+    font-size: 4rem;
+    font-weight: 700;
+    color: hsl(var(--foreground));
+    margin-bottom: 24px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+}
+
+.hero .subtitle {
+    font-size: 1.25rem;
+    color: hsl(var(--muted-foreground));
+    max-width: 700px;
+    margin: 0 auto 40px;
+    line-height: 1.6;
+}
+
+.btn-primary {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-radius: var(--radius);
+    padding: 0 24px;
+    height: 44px;
+    line-height: 44px;
+    font-weight: 500;
+    box-shadow: none;
+    text-transform: none;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: hsl(222.2 47.4% 8%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 0 24px;
+    height: 44px;
+    line-height: 42px;
+    font-weight: 500;
+    box-shadow: none;
+    text-transform: none;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background-color: hsl(var(--accent));
+    border-color: hsl(214.3 31.8% 85%);
+}
+
+.stats-section {
+    background-color: hsl(var(--muted));
+    padding: 60px 0;
+    border-top: 1px solid hsl(var(--border));
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+.stat-card {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: hsl(var(--foreground));
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    margin-bottom: 4px;
+}
+
+.stat-description {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: hsl(var(--foreground));
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+}
+
+.section-subtitle {
+    font-size: 1.1rem;
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 60px;
+}
+
+.feature-card {
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 32px 24px;
+    height: 100%;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.feature-card:hover {
+    border-color: hsl(214.3 31.8% 80%);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    transform: translateY(-2px);
+}
+
+.feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius);
+    background-color: hsl(var(--muted));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.feature-icon i {
+    font-size: 24px;
+    color: hsl(var(--foreground));
+}
+
+.feature-card h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    margin-bottom: 12px;
+}
+
+.feature-card p {
+    font-size: 0.9rem;
+    color: hsl(var(--muted-foreground));
+    line-height: 1.6;
+}
+
+.how-it-works {
+    padding: 80px 0;
+    background-color: hsl(var(--background));
+}
+
+.step-container {
+    position: relative;
+    padding: 0 20px;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin: 0 auto 20px;
+}
+
+.step-container h5 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    margin-bottom: 8px;
+}
+
+.step-container p {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    line-height: 1.5;
+}
+
+.cta-section {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    padding: 80px 0;
+}
+
+.cta-section h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: -0.01em;
+}
+
+.cta-section p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 32px;
+}
+
+.btn-cta {
+    background-color: hsl(var(--primary-foreground));
+    color: hsl(var(--primary));
+    border-radius: var(--radius);
+    padding: 0 28px;
+    height: 48px;
+    line-height: 48px;
+    font-weight: 600;
+    box-shadow: none;
+    text-transform: none;
+    transition: all 0.2s;
+}
+
+.btn-cta:hover {
+    background-color: hsl(210 40% 95%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.about-section {
+    padding: 80px 0;
+    background-color: hsl(var(--background));
+}
+
+.benefit-item {
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.benefit-item:hover {
+    background-color: hsl(var(--muted));
+}
+
+.benefit-item i {
+    color: hsl(var(--foreground));
+    margin-right: 16px;
+    font-size: 20px;
+}
+
+.benefit-item span {
+    font-size: 0.95rem;
+    color: hsl(var(--foreground));
+    font-weight: 500;
+}
+
+.community-visual {
+    background-color: hsl(var(--muted));
+    border-radius: var(--radius);
+    padding: 60px 40px;
+    text-align: center;
+    border: 1px solid hsl(var(--border));
+}
+
+.community-visual i {
+    font-size: 120px;
+    color: hsl(var(--muted-foreground));
+    opacity: 0.3;
+}
+
+footer {
+    background-color: hsl(var(--background));
+    border-top: 1px solid hsl(var(--border));
+    padding: 60px 0 30px;
+    color: hsl(var(--muted-foreground));
+}
+
+footer h5 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+footer p,
+footer li {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+}
+
+footer a {
+    color: hsl(var(--muted-foreground));
+    transition: color 0.2s;
+}
+
+footer a:hover {
+    color: hsl(var(--foreground));
+}
+
+footer ul {
+    list-style: none;
+    padding: 0;
+}
+
+footer ul li {
+    margin-bottom: 8px;
+}
+
+.divider {
+    background-color: hsl(var(--border));
+    margin: 40px 0 20px;
 }

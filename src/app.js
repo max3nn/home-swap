@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const expressLayouts = require('express-ejs-layouts');
 const connectDB = require('./config/database');
 
 const app = express();
@@ -8,9 +9,11 @@ const PORT = process.env.PORT || 3000;
 // Connect to database
 connectDB();
 
-// Set up EJS templating
+// Set up EJS templating with layouts
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.use(expressLayouts);
+app.set('layout', 'layout');
 
 // Middleware
 app.use(express.json());
@@ -19,7 +22,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Basic route
 app.get('/', (req, res) => {
-  res.render('index', { title: 'Home Swap Platform' });
+  res.render('home', { title: 'Home Swap Platform' });
 });
 
 // Error handling middleware
