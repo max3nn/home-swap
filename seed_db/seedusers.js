@@ -1,13 +1,13 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/homeswapDB', { useNewUrlParser: true, useUnifiedTopology: true });
-mongoose.connection.on('connected', () => {
-    console.log('Connected to MongoDB!');
-});
-
+// Create userSchema
 const userSchema = new mongoose.Schema({
+    userId: {
+        type: String,
+        required: true,
+        unique: true,
+    },
     username: {
         type: String,
         required: true,
@@ -63,16 +63,44 @@ const User = mongoose.model('User', userSchema);
 
 const seedUsers = async () => {
     const users = [
-        { username: 'Antheis', email: 'antheis@example.com', password: 'password123', userrole: 'sample' },
-        { username: 'Joshua', email: 'joshua@example.com', password: 'password123', userrole: 'sample' },
-        { username: 'Rana', email: 'rana@example.com', password: 'password123', userrole: 'sample' },
-        { username: 'Sheibha', email: 'sheibha@example.com', password: 'password123', userrole: 'sample' },
+        {
+            userId: new mongoose.Types.ObjectId().toString(),
+            username: 'Antheis',
+            email: 'antheis@example.com',
+            password: 'password123',
+            userrole: 'sample',
+        },
+        {
+            userId: new mongoose.Types.ObjectId().toString(),
+            username: 'Joshua',
+            email: 'joshua@example.com',
+            password: 'password123',
+            userrole: 'sample',
+        },
+        {
+            userId: new mongoose.Types.ObjectId().toString(),
+            username: 'Rana',
+            email: 'rana@example.com',
+            password: 'password123',
+            userrole: 'sample',
+        },
+        {
+            userId: new mongoose.Types.ObjectId().toString(),
+            username: 'Sheibha',
+            email: 'sheibha@example.com',
+            password: 'password123',
+            userrole: 'sample',
+        },
     ];
     await User.deleteMany({});
     await User.insertMany(users);
 };
 
-mongoose.connect('mongodb://localhost:27017/yourDatabaseName', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose
+    .connect('mongodb://localhost:27017/homeswapDB', {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    })
     .then(async () => {
         console.log('Database connected');
         await seedUsers();
