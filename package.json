@@ -1,34 +1,38 @@
 {
-  "name": "home-swap",
-  "version": "0.1.0",
-  "private": true,
+  "name": "home-swap-platform",
+  "version": "1.0.0",
+  "description": "A web-based platform for exchanging personal items within the community",
+  "main": "src/app.js",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "lint:fix": "eslint --fix",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "type-check": "tsc --noEmit",
-    "prepare": "husky install"
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch --runInBand",
+    "test:coverage": "jest --coverage --runInBand",
+    "docker:up": "docker-compose up -d mongodb mongo-express",
+    "docker:down": "docker-compose down",
+    "docker:test": "docker-compose --profile test up -d",
+    "docker:logs": "docker-compose logs mongodb",
+    "docker:logs:express": "docker-compose logs mongo-express"
   },
+  "keywords": [
+    "swap",
+    "exchange",
+    "community",
+    "items"
+  ],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
-    "next": "16.1.1",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "ejs": "^4.0.1",
+    "express": "^5.2.1",
+    "materialize-css": "^1.0.0",
+    "mongoose": "^9.1.4"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "babel-plugin-react-compiler": "1.0.0",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.1",
-    "husky": "^9.0.0",
-    "prettier": "^3.0.0",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "fast-check": "^4.5.3",
+    "jest": "^30.2.0",
+    "nodemon": "^3.1.11",
+    "supertest": "^7.2.2"
   }
 }
