@@ -42,17 +42,4 @@ const seedSwaps = async () => {
   await Swap.insertMany(swaps);
 };
 
-mongoose
-  .connect('mongodb://localhost:27017/homeswapDB', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(async () => {
-    console.log('Database connected');
-    await seedSwaps();
-    console.log('Database seeded with swaps');
-    mongoose.connection.close();
-  })
-  .catch(err => {
-    console.error('Database connection error:', err);
-  });
+export default seedSwaps;
