@@ -127,4 +127,4 @@ export function ComponentName({ prop1, prop2 }: Props) {
 
 ---
 
-**Questions?** Reach out to the team lead or create an issue in the repository.
+**Questions?** Reach out to the team chat or create an issue in the repository.
