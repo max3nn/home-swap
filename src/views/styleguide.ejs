@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design System - Home Swap Platform</title>
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/style.css">
+    
+    <style>
+        .styleguide-section {
+            margin: var(--spacing-3xl) 0;
+            padding: var(--spacing-xl);
+            border-top: 2px solid var(--neutral-lighter);
+        }
+        
+        .styleguide-section:first-of-type {
+            border-top: none;
+        }
+        
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--spacing-lg);
+            margin: var(--spacing-lg) 0;
+        }
+        
+        .color-box {
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            color: var(--white);
+        }
+        
+        .color-box-light {
+            color: var(--neutral-dark);
+            border: 2px solid var(--neutral-lighter);
+        }
+        
+        .color-name {
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-semibold);
+            margin-top: var(--spacing-md);
+        }
+        
+        .color-value {
+            font-size: var(--font-size-xs);
+            opacity: 0.8;
+            margin-top: var(--spacing-sm);
+            font-family: var(--font-family-mono);
+        }
+        
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-lg);
+            margin: var(--spacing-lg) 0;
+        }
+        
+        .component-demo {
+            padding: var(--spacing-lg);
+            border: 1px solid var(--neutral-lighter);
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+            align-items: center;
+        }
+        
+        .form-demo {
+            max-width: 400px;
+            margin: var(--spacing-xl) auto;
+        }
+        
+        .button-showcase {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+            margin: var(--spacing-lg) 0;
+        }
+        
+        .typography-demo {
+            margin: var(--spacing-xl) 0;
+        }
+        
+        nav {
+            background-color: var(--white);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div style="display: flex; align-items: center; padding: 0 var(--spacing-lg); height: 64px;">
+            <a href="/" class="brand-logo">🏠 Home Swap</a>
+            <div style="margin-left: auto;">
+                <a href="/" style="margin-right: var(--spacing-xl);">Home</a>
+                <a href="/styleguide" class="active">Design Guide</a>
+            </div>
+        </div>
+    </nav>
+
+    <main style="max-width: 1200px; margin: 0 auto; padding: var(--spacing-xl) var(--spacing-md);">
+        
+        <!-- Header -->
+        <section class="styleguide-section">
+            <h1>Design System Showcase</h1>
+            <p class="text-secondary" style="font-size: var(--font-size-lg);">
+                Complete style guide for the Home Swap Platform. Explore colors, typography, components, and patterns.
+            </p>
+        </section>
+
+        <!-- Colors -->
+        <section class="styleguide-section">
+            <h2>Color Palette</h2>
+            <p>Our carefully crafted color system designed for accessibility and modern aesthetics.</p>
+            
+            <h3 style="margin-top: var(--spacing-2xl);">Primary Colors</h3>
+            <div class="color-grid">
+                <div class="color-box" style="background-color: var(--primary-main);">
+                    <div class="color-name">Primary Main</div>
+                    <div class="color-value">#00897b</div>
+                </div>
+                <div class="color-box" style="background-color: var(--primary-light);">
+                    <div class="color-name">Primary Light</div>
+                    <div class="color-value">#26a69a</div>
+                </div>
+                <div class="color-box" style="background-color: var(--primary-lighter);">
+                    <div class="color-name">Primary Lighter</div>
+                    <div class="color-value">#80cbc4</div>
+                </div>
+                <div class="color-box color-box-light" style="background-color: var(--primary-lightest);">
+                    <div class="color-name">Primary Lightest</div>
+                    <div class="color-value">#e0f2f1</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: var(--spacing-2xl);">Accent & Semantic Colors</h3>
+            <div class="color-grid">
+                <div class="color-box" style="background-color: var(--accent-main);">
+                    <div class="color-name">Accent</div>
+                    <div class="color-value">#ff6b35</div>
+                </div>
+                <div class="color-box" style="background-color: var(--success);">
+                    <div class="color-name">Success</div>
+                    <div class="color-value">#4caf50</div>
+                </div>
+                <div class="color-box" style="background-color: var(--warning);">
+                    <div class="color-name">Warning</div>
+                    <div class="color-value">#fb8c00</div>
+                </div>
+                <div class="color-box" style="background-color: var(--error);">
+                    <div class="color-name">Error</div>
+                    <div class="color-value">#e53935</div>
+                </div>
+                <div class="color-box" style="background-color: var(--info);">
+                    <div class="color-name">Info</div>
+                    <div class="color-value">#1976d2</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: var(--spacing-2xl);">Neutral Colors</h3>
+            <div class="color-grid">
+                <div class="color-box" style="background-color: var(--neutral-dark);">
+                    <div class="color-name">Dark</div>
+                    <div class="color-value">#212121</div>
+                </div>
+                <div class="color-box" style="background-color: var(--neutral-dark-gray);">
+                    <div class="color-name">Dark Gray</div>
+                    <div class="color-value">#424242</div>
+                </div>
+                <div class="color-box" style="background-color: var(--neutral-medium);">
+                    <div class="color-name">Medium</div>
+                    <div class="color-value">#757575</div>
+                </div>
+                <div class="color-box color-box-light" style="background-color: var(--neutral-light);">
+                    <div class="color-name">Light</div>
+                    <div class="color-value">#bdbdbd</div>
+                </div>
+                <div class="color-box color-box-light" style="background-color: var(--neutral-lighter);">
+                    <div class="color-name">Lighter</div>
+                    <div class="color-value">#e0e0e0</div>
+                </div>
+                <div class="color-box color-box-light" style="background-color: var(--neutral-lightest);">
+                    <div class="color-name">Lightest</div>
+                    <div class="color-value">#f5f5f5</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typography -->
+        <section class="styleguide-section">
+            <h2>Typography</h2>
+            <p>Clear, readable hierarchy for content across all screen sizes.</p>
+            
+            <div class="typography-demo">
+                <h1>Heading 1 - 36px (2.25rem)</h1>
+                <p class="text-muted">Used for page titles and major sections</p>
+                
+                <h2 style="margin-top: var(--spacing-2xl);">Heading 2 - 30px (1.875rem)</h2>
+                <p class="text-muted">Used for main section headings</p>
+                
+                <h3 style="margin-top: var(--spacing-2xl);">Heading 3 - 24px (1.5rem)</h3>
+                <p class="text-muted">Used for subsection headings</p>
+                
+                <h4 style="margin-top: var(--spacing-2xl);">Heading 4 - 20px (1.25rem)</h4>
+                <p class="text-muted">Used for minor headings</p>
+                
+                <p style="margin-top: var(--spacing-2xl); font-size: var(--font-size-base);">
+                    Body text - 16px (1rem). This is the standard font size for regular paragraph content. 
+                    It provides excellent readability and accessibility across all devices.
+                </p>
+                
+                <p class="text-small" style="margin-top: var(--spacing-lg);">
+                    Small text - 14px (0.875rem). Used for secondary information and helper text.
+                </p>
+            </div>
+        </section>
+
+        <!-- Buttons -->
+        <section class="styleguide-section">
+            <h2>Buttons</h2>
+            
+            <h3>Primary Buttons</h3>
+            <div class="button-showcase">
+                <button class="btn">Default Button</button>
+                <button class="btn" disabled>Disabled Button</button>
+                <button class="btn btn-small">Small Button</button>
+                <button class="btn btn-large">Large Button</button>
+            </div>
+
+            <h3 style="margin-top: var(--spacing-2xl);">Button Variants</h3>
+            <div class="button-showcase">
+                <button class="btn">Primary</button>
+                <button class="btn btn-secondary">Secondary</button>
+                <button class="btn btn-accent">Accent</button>
+                <button class="btn btn-success">Success</button>
+                <button class="btn btn-error">Error</button>
+            </div>
+
+            <h3 style="margin-top: var(--spacing-2xl);">Block Button</h3>
+            <button class="btn btn-block">Full Width Button</button>
+        </section>
+
+        <!-- Forms -->
+        <section class="styleguide-section">
+            <h2>Form Elements</h2>
+            <p>Accessible, modern form controls with clear focus states.</p>
+            
+            <div class="form-demo">
+                <div class="input-field">
+                    <label for="text-input">Text Input</label>
+                    <input type="text" id="text-input" placeholder="Enter text...">
+                </div>
+
+                <div class="input-field">
+                    <label for="email-input">Email Address</label>
+                    <input type="email" id="email-input" placeholder="user@example.com">
+                </div>
+
+                <div class="input-field">
+                    <label for="password-input">Password</label>
+                    <input type="password" id="password-input" placeholder="Enter password...">
+                </div>
+
+                <div class="input-field">
+                    <label for="textarea-input">Textarea</label>
+                    <textarea id="textarea-input" placeholder="Enter message..." style="height: 100px;"></textarea>
+                </div>
+
+                <div class="input-field">
+                    <label for="select-input">Select</label>
+                    <select id="select-input">
+                        <option value="">Choose an option</option>
+                        <option value="1">Option 1</option>
+                        <option value="2">Option 2</option>
+                        <option value="3">Option 3</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-block">Submit Form</button>
+            </div>
+        </section>
+
+        <!-- Cards -->
+        <section class="styleguide-section">
+            <h2>Cards</h2>
+            <p>Versatile card components for displaying content groupings.</p>
+            
+            <div class="component-grid">
+                <div class="card">
+                    <div class="card-title">
+                        <span style="font-size: 24px;">📦</span>
+                        <span>Featured Item</span>
+                    </div>
+                    <p>Exchange a gently used coffee maker for a bookshelf. Great condition, works perfectly.</p>
+                    <div class="card-action">
+                        <button class="btn btn-small">View Details</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <span style="font-size: 24px;">👤</span>
+                        <span>User Profile</span>
+                    </div>
+                    <p><strong>Member since:</strong> January 2024</p>
+                    <p><strong>Rating:</strong> ⭐ 4.8/5 (42 reviews)</p>
+                    <div class="card-action">
+                        <button class="btn btn-secondary btn-small">View Profile</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <span style="font-size: 24px;">✅</span>
+                        <span>Completed Swap</span>
+                    </div>
+                    <p>You successfully swapped items with Sarah on Jan 15, 2024</p>
+                    <div class="card-action">
+                        <button class="btn btn-secondary btn-small">Leave Review</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Alerts -->
+        <section class="styleguide-section">
+            <h2>Alerts & Messages</h2>
+            <p>Feedback messages for different states and actions.</p>
+            
+            <div class="alert alert-success">
+                <span style="font-size: 20px;">✓</span>
+                <div>
+                    <strong>Success!</strong> Your item has been listed successfully.
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <span style="font-size: 20px;">ℹ</span>
+                <div>
+                    <strong>Info:</strong> You have 2 pending swap offers.
+                </div>
+            </div>
+
+            <div class="alert alert-warning">
+                <span style="font-size: 20px;">⚠</span>
+                <div>
+                    <strong>Warning:</strong> Your profile is incomplete. Add a photo to increase engagement.
+                </div>
+            </div>
+
+            <div class="alert alert-error">
+                <span style="font-size: 20px;">✕</span>
+                <div>
+                    <strong>Error:</strong> Something went wrong. Please try again later.
+                </div>
+            </div>
+        </section>
+
+        <!-- Text Utilities -->
+        <section class="styleguide-section">
+            <h2>Text Utilities</h2>
+            
+            <div style="display: grid; gap: var(--spacing-lg);">
+                <div>
+                    <p class="text-primary"><strong>Primary Text</strong> - Uses primary brand color</p>
+                </div>
+                <div>
+                    <p class="text-secondary"><strong>Secondary Text</strong> - Uses secondary color</p>
+                </div>
+                <div>
+                    <p class="text-accent"><strong>Accent Text</strong> - Uses accent color</p>
+                </div>
+                <div>
+                    <p class="text-success"><strong>Success Text</strong> - Uses success color</p>
+                </div>
+                <div>
+                    <p class="text-error"><strong>Error Text</strong> - Uses error color</p>
+                </div>
+                <div>
+                    <p class="text-muted"><strong>Muted Text</strong> - Uses neutral medium color</p>
+                </div>
+                <div>
+                    <p class="text-bold"><strong>Bold Text</strong> - Font weight 700</p>
+                </div>
+                <div>
+                    <p class="text-semibold">Semibold Text - Font weight 600</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Background Colors -->
+        <section class="styleguide-section">
+            <h2>Background Colors</h2>
+            
+            <div class="component-grid">
+                <div class="bg-primary" style="padding: var(--spacing-lg); border-radius: var(--radius-md);">
+                    <strong>Primary Background</strong>
+                </div>
+                <div class="bg-primary-light" style="padding: var(--spacing-lg); border-radius: var(--radius-md);">
+                    <strong>Primary Light</strong>
+                </div>
+                <div class="bg-accent" style="padding: var(--spacing-lg); border-radius: var(--radius-md);">
+                    <strong>Accent Background</strong>
+                </div>
+                <div class="bg-accent-light" style="padding: var(--spacing-lg); border-radius: var(--radius-md);">
+                    <strong>Accent Light</strong>
+                </div>
+                <div class="bg-success" style="padding: var(--spacing-lg); border-radius: var(--radius-md);">
+                    <strong>Success Background</strong>
+                </div>
+                <div class="bg-success-light" style="padding: var(--spacing-lg); border-radius: var(--radius-md);">
+                    <strong>Success Light</strong>
+                </div>
+                <div class="bg-error" style="padding: var(--spacing-lg); border-radius: var(--radius-md);">
+                    <strong>Error Background</strong>
+                </div>
+                <div class="bg-error-light" style="padding: var(--spacing-lg); border-radius: var(--radius-md);">
+                    <strong>Error Light</strong>
+                </div>
+                <div class="bg-warning" style="padding: var(--spacing-lg); border-radius: var(--radius-md);">
+                    <strong>Warning Background</strong>
+                </div>
+                <div class="bg-warning-light" style="padding: var(--spacing-lg); border-radius: var(--radius-md);">
+                    <strong>Warning Light</strong>
+                </div>
+                <div class="bg-info" style="padding: var(--spacing-lg); border-radius: var(--radius-md);">
+                    <strong>Info Background</strong>
+                </div>
+                <div class="bg-info-light" style="padding: var(--spacing-lg); border-radius: var(--radius-md);">
+                    <strong>Info Light</strong>
+                </div>
+            </div>
+        </section>
+
+        <!-- Layout Examples -->
+        <section class="styleguide-section">
+            <h2>Layout Examples</h2>
+            
+            <h3>Flex Utilities</h3>
+            <div class="flex justify-between align-center" style="background-color: var(--neutral-lightest); padding: var(--spacing-lg); border-radius: var(--radius-md); margin: var(--spacing-lg) 0;">
+                <div>Left aligned content</div>
+                <div>Center content</div>
+                <div>Right aligned content</div>
+            </div>
+
+            <h3 style="margin-top: var(--spacing-2xl);">Spacing Classes</h3>
+            <div style="background-color: var(--primary-lightest); padding: var(--spacing-lg); border-radius: var(--radius-md);">
+                <p class="mt mb">Margin top and bottom</p>
+                <p class="pt pb">Padding top and bottom</p>
+            </div>
+        </section>
+
+        <!-- Shadows -->
+        <section class="styleguide-section">
+            <h2>Elevation System</h2>
+            <p>Shadows create depth and hierarchy in the interface.</p>
+            
+            <div class="component-grid">
+                <div class="shadow" style="padding: var(--spacing-lg); border-radius: var(--radius-md); background: var(--white);">
+                    <strong>Shadow MD</strong><br>
+                    <span class="text-muted">Standard elevation</span>
+                </div>
+                <div class="shadow-lg" style="padding: var(--spacing-lg); border-radius: var(--radius-md); background: var(--white);">
+                    <strong>Shadow LG</strong><br>
+                    <span class="text-muted">Elevated state</span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+        <div style="padding: var(--spacing-xl);">
+            <p style="text-align: center; color: var(--neutral-medium);">
+                Home Swap Platform Design System © 2024
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>

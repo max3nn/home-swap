@@ -22,6 +22,11 @@ app.get('/', (req, res) => {
   res.render('index', { title: 'Home Swap Platform' });
 });
 
+// Style guide route
+app.get('/styleguide', (req, res) => {
+  res.render('styleguide', { title: 'Design System' });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
