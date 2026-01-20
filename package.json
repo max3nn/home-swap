@@ -27,6 +27,7 @@
   "dependencies": {
     "ejs": "^4.0.1",
     "express": "^5.2.1",
+    "express-ejs-layouts": "^2.5.1",
     "materialize-css": "^1.0.0",
     "mongoose": "^9.1.4",
     "bcrypt": "^5.1.1"
