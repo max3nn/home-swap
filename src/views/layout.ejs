@@ -370,6 +370,29 @@
             background-color: hsl(var(--border));
             margin: 40px 0 20px;
         }
+
+        /* User dropdown styles */
+        .dropdown-content {
+            background-color: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        .dropdown-content li > a {
+            color: hsl(var(--foreground));
+            padding: 12px 20px;
+            font-size: 0.9rem;
+        }
+
+        .dropdown-content li > a:hover {
+            background-color: hsl(var(--muted));
+        }
+
+        .dropdown-content li > a i {
+            margin-right: 12px;
+            vertical-align: middle;
+        }
     </style>
     
 </head>
@@ -377,7 +400,7 @@
     <!-- Navigation -->
     <nav>
         <div class="nav-wrapper container">
-            <a href="#" class="brand-logo">
+            <a href="/" class="brand-logo">
                 <i class="material-icons" style="vertical-align: middle; margin-right: 4px;">swap_horiz</i>
                 HomeSwap
             </a>
@@ -385,7 +408,22 @@
                 <li><a href="#features">Features</a></li>
                 <li><a href="#how-it-works">How It Works</a></li>
                 <li><a href="#about">About</a></li>
-                <li><a href="#login">Login</a></li>
+                <% if (typeof user !== 'undefined' && user) { %>
+                    <li>
+                        <a class="dropdown-trigger" href="#!" data-target="user-dropdown" style="display: flex; align-items: center;">
+                            <i class="material-icons" style="margin-right: 4px;">account_circle</i>
+                            <%= user.username %>
+                            <i class="material-icons right" style="margin-left: 4px;">arrow_drop_down</i>
+                        </a>
+                    </li>
+                    <!-- Dropdown Structure -->
+                    <ul id="user-dropdown" class="dropdown-content">
+                        <li><a href="#!"><i class="material-icons">person</i>Profile</a></li>
+                        <li><a href="#!"><i class="material-icons">exit_to_app</i>Logout</a></li>
+                    </ul>
+                <% } else { %>
+                    <li><a href="/auth/login">Login</a></li>
+                <% } %>
             </ul>
         </div>
     </nav>
@@ -427,6 +465,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize dropdown
+            const dropdownElems = document.querySelectorAll('.dropdown-trigger');
+            M.Dropdown.init(dropdownElems, {
+                alignment: 'right',
+                constrainWidth: false,
+                coverTrigger: false
+            });
+
+            // Smooth scroll for anchor links
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
                     e.preventDefault();
