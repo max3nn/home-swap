@@ -48,3 +48,17 @@ requirements*
 
 # OS
 Thumbs.db
+
+# Home Swap Platform specific
+src/public/images/uploads/
+docker-data/
+*.swp
+*.swo
+*~
+
+# Test coverage
+.nyc_output/
+
+# Docker volumes
+mongodb_data/
+mongodb_test_data/
