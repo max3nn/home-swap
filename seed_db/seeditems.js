@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { it } from 'node:test';
 
 // Create itemSchema
 const itemSchema = new mongoose.Schema({
