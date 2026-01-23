@@ -41,9 +41,9 @@
 
                         <div class="input-field">
                             <i class="material-icons prefix" style="color: hsl(var(--muted-foreground));">lock</i>
-                            <input id="password" name="password" type="password" class="validate" required minlength="6">
+                            <input id="password" name="password" type="password" class="validate" required minlength="8">
                             <label for="password">Password</label>
-                            <span class="helper-text" data-error="Password must be at least 6 characters"></span>
+                            <span class="helper-text" data-error="Password must be at least 8 characters"></span>
                         </div>
 
                         <button type="submit" class="btn-primary waves-effect waves-light" style="width: 100%; margin-top: 24px; height: 48px; line-height: 48px;">
@@ -163,11 +163,7 @@
                 return;
             }
 
-            if (formData.password.length < 6) {
-                showError('Password must be at least 6 characters long');
-                return;
-            }
-
+            
             // Disable submit button
             submitButton.disabled = true;
             submitButton.innerHTML = 'Creating Account... <i class="material-icons right" style="line-height: inherit;">hourglass_empty</i>';
@@ -219,7 +215,7 @@
                     }, 2000);
                 } else {
                     // Show error message
-                    showError(data.message || 'Registration failed. Please try again.');
+                    showError(data.message || data.error || 'Registration failed. Please try again.');
                 }
             } catch (error) {
                 console.error('Registration error:', error);

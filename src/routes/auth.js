@@ -59,13 +59,31 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Validation: Check password length (minimum 6 characters)
-    if (password.length < 6) {
+    // Validation: Check password length (minimum 8 characters)
+    if (password.length < 8) {
       return res.status(400).json({
         success: false,
-        message: 'Password must be at least 6 characters long',
+        message: 'Password must be at least 8 characters long',
       });
-    }
+  }
+
+    // Check password strength
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+    if (!strongPasswordRegex.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Password must include at least one uppercase letter, one lowercase letter, and one number',
+     });
+  }
+
+    // Generic error response - always return JSON
+    return res.status(500).json({
+      success: false,
+      message: 'An error occurred during registration. Please try again.',
+      ...(process.env.NODE_ENV === 'development' && { error: error.message }),
+    });
 
     // Check if user already exists (case-insensitive for email)
     const existingUser = await User.findOne({

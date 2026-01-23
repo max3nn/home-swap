@@ -25,13 +25,13 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "ejs": "^4.0.1",
     "express": "^5.2.1",
     "express-ejs-layouts": "^2.5.1",
     "express-session": "^1.18.2",
     "materialize-css": "^1.0.0",
-    "mongoose": "^9.1.4",
-    "bcrypt": "^5.1.1"
+    "mongoose": "^9.1.4"
   },
   "devDependencies": {
     "fast-check": "^4.5.3",
