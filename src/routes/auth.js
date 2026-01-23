@@ -75,8 +75,15 @@ router.post('/register', async (req, res) => {
         success: false,
         message:
           'Password must include at least one uppercase letter, one lowercase letter, and one number',
-      });
- }
+     });
+  }
+
+    // Generic error response - always return JSON
+    return res.status(500).json({
+      success: false,
+      message: 'An error occurred during registration. Please try again.',
+      ...(process.env.NODE_ENV === 'development' && { error: error.message }),
+    });
 
     // Check if user already exists (case-insensitive for email)
     const existingUser = await User.findOne({

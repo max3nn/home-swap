@@ -215,7 +215,7 @@
                     }, 2000);
                 } else {
                     // Show error message
-                    showError(data.message || 'Registration failed. Please try again.');
+                    showError(data.message || data.error || 'Registration failed. Please try again.');
                 }
             } catch (error) {
                 console.error('Registration error:', error);
