@@ -48,6 +48,10 @@ app.get('/', (req, res) => {
 const authRoutes = require('./routes/auth');
 app.use('/auth', authRoutes);
 
+// Messaging routes
+const messagesRoutes = require('./routes/messages');
+app.use('/messages', messagesRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
