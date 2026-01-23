@@ -35,19 +35,20 @@ const userSchema = new mongoose.Schema({
 });
 
 // Hash password before saving
-userSchema.pre('save', async function () {
-  if (!this.isModified('password')) return;
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
 
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
+    return next();
   } catch (error) {
-    throw error;
+    return next(error);
   }
 });
 
 // Hash password before insertMany
-userSchema.pre('insertMany', async function (docs) {
+userSchema.pre('insertMany', async function (next, docs) {
   try {
     const salt = await bcrypt.genSalt(10);
     for (let doc of docs) {
@@ -57,6 +58,7 @@ userSchema.pre('insertMany', async function (docs) {
     }
   } catch (error) {
     throw error;
+    return next();
   }
 });
 
