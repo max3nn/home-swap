@@ -30,6 +30,56 @@ npm run lint
 npm run format:check
 ```
 
+```md
+### 2A. Database Setup (Docker Desktop – No Docker Compose)
+
+This project uses MongoDB for data storage.  
+If Docker Compose is not available, MongoDB can be started manually using Docker Desktop only.
+
+#### Prerequisites
+- Docker Desktop installed
+- Docker Desktop running
+
+#### Step 1: Start MongoDB container
+Run the following command from the project root:
+
+```bash
+docker run -d --name homeswap-mongo -p 27017:27017 mongo:6
+
+This starts a MongoDB container and exposes it on port 27017.
+
+#### Step 2: Initialise the database
+
+The database is initialised using the provided script in `docker/mongo-init.js`.
+
+Run the following commands from the project root:
+
+```bash
+docker cp docker/mongo-init.js homeswap-mongo:/mongo-init.js
+docker exec -it homeswap-mongo mongosh /mongo-init.js
+
+#### Step 3: Verify database setup 
+
+To verify the database and collections:
+
+```bash
+docker exec -it homeswap-mongo mongosh
+
+#### Step 4: Configure environment variables
+
+Create a `.env` file from the example:
+
+```bash
+cp .env.example .env
+
+#### Step 5: Run the application
+
+Install dependencies and start the application:
+
+```bash
+npm install
+npm run dev
+
 ### 3. IDE Configuration
 
 #### VS Code Extensions (Recommended)
