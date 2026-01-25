@@ -1,0 +1,88 @@
+<section class="container" style="padding: 28px 0 46px;">
+  <div class="row" style="margin: 0 auto; max-width: 920px;">
+    <div class="col s12">
+      <div style="display:flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px;">
+        <h3 style="margin: 0; font-weight: 900; letter-spacing: -0.02em; color: hsl(var(--foreground));">Post an Item</h3>
+        <a href="/search" class="btn-flat" style="color: hsl(var(--muted-foreground));">Back to search</a>
+      </div>
+
+      <% if (errors && errors.length > 0) { %>
+        <div style="background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px;">
+          <div style="font-weight: 800; color: #b91c1c; margin-bottom: 6px;">Please fix the following:</div>
+          <ul style="margin: 0; padding-left: 18px; color: #b91c1c;">
+            <% errors.forEach(function(err) { %>
+              <li><%= err %></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+
+      <div style="background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
+        <form method="POST" action="/items/new" enctype="multipart/form-data">
+          <div class="row" style="margin-bottom: 0;">
+            <div class="input-field col s12">
+              <input id="title" name="title" type="text" value="<%= values && values.title ? values.title : '' %>" required />
+              <label class="active" for="title">Title</label>
+            </div>
+          </div>
+
+          <div class="row" style="margin-bottom: 0;">
+            <div class="input-field col s12">
+              <textarea id="description" name="description" class="materialize-textarea" required><%= values && values.description ? values.description : '' %></textarea>
+              <label class="active" for="description">Description</label>
+            </div>
+          </div>
+
+          <div class="row" style="margin-bottom: 0;">
+            <div class="input-field col s12 m6">
+              <select id="itemType" name="itemType">
+                <option value="" <%= !values || !values.itemType ? 'selected' : '' %>>Select a category (optional)</option>
+                <% (categories || []).forEach(function(cat) { %>
+                  <option value="<%= cat %>" <%= values && values.itemType === cat ? 'selected' : '' %>><%= cat %></option>
+                <% }); %>
+              </select>
+              <label for="itemType">Item Category</label>
+            </div>
+
+            <div class="col s12 m6" style="margin-top: 6px;">
+              <div style="font-weight: 700; color: hsl(var(--foreground)); margin-bottom: 8px;">Image (optional)</div>
+              <input type="file" name="image" accept="image/*" />
+              <div style="margin-top: 6px; color: hsl(var(--muted-foreground)); font-size: 0.85rem;">Up to 10MB.</div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-bottom: 0;">
+            <div class="col s12">
+              <div style="font-weight: 700; color: hsl(var(--foreground)); margin: 8px 0 10px;">What would you swap for? (optional)</div>
+              <div style="display:flex; flex-wrap: wrap; gap: 10px;">
+                <% (categories || []).forEach(function(cat) { %>
+                  <label style="display:inline-flex; align-items:center; gap: 8px; padding: 6px 10px; border-radius: 999px; border: 1px solid hsl(var(--border)); background-color: hsl(var(--muted));">
+                    <input type="checkbox" name="wantedCategories" value="<%= cat %>" <%= values && values.wantedCategories && values.wantedCategories.includes(cat) ? 'checked' : '' %> />
+                    <span style="color: hsl(var(--foreground)); font-size: 0.9rem;"><%= cat %></span>
+                  </label>
+                <% }); %>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap: 10px; justify-content: flex-end; margin-top: 18px;">
+            <a href="/search" class="btn-flat" style="color: hsl(var(--muted-foreground));">Cancel</a>
+            <button type="submit" class="btn" style="background-color: hsl(var(--primary)); border-radius: 999px; box-shadow: none;">
+              <i class="material-icons left">add_circle</i>
+              Post Item
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const elems = document.querySelectorAll('select');
+    if (window.M && M.FormSelect) {
+      M.FormSelect.init(elems);
+    }
+  });
+</script>
