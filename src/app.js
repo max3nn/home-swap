@@ -48,6 +48,10 @@ app.get('/', (req, res) => {
 const authRoutes = require('./routes/auth');
 app.use('/auth', authRoutes);
 
+// Search routes (requires login in the router)
+const searchRoutes = require('./routes/search');
+app.use('/search', searchRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

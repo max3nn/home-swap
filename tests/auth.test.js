@@ -18,14 +18,6 @@ const app = require('../src/app');
 
 describe('Auth - Login', () => {
   beforeEach(() => {
-    // Ensure auth route passes its DB ready check even when Mongo isn't running.
-    // We mock the model methods, so no real DB calls occur.
-    try {
-      mongoose.connection.readyState = 1;
-    } catch (e) {
-      // Ignore if read-only in this environment
-    }
-
     User.findOne.mockReset();
   });
 
@@ -75,8 +67,8 @@ describe('Auth - Login', () => {
     });
 
     // And GET /auth/login should redirect because session user exists
-    const loginPageRes = await agent.get('/auth/login').expect(302);
-    expect(loginPageRes.headers.location).toBe('/');
+      const loginPageRes = await agent.get('/auth/login').expect(302);
+      expect(loginPageRes.headers.location).toBe('/search');
   });
 
   test('invalid credentials return an error and do not create a session', async () => {

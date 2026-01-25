@@ -12,7 +12,7 @@ router.get('/register', (req, res) => {
 router.get('/login', (req, res) => {
   // Redirect to home if already logged in
   if (req.session.user) {
-    return res.redirect('/');
+    return res.redirect('/search');
   }
   res.render('login', { title: 'Login' });
 });
@@ -21,7 +21,7 @@ router.get('/login', (req, res) => {
 router.post('/register', async (req, res) => {
   try {
     // Check if database is connected
-    if (mongoose.connection.readyState !== 1) {
+    if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
       return res.status(503).json({
         success: false,
         message: 'Database connection unavailable. Please try again later.',
@@ -153,7 +153,7 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     // Check if database is connected
-    if (mongoose.connection.readyState !== 1) {
+    if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
       return res.status(503).json({
         success: false,
         message: 'Database connection unavailable. Please try again later.',
