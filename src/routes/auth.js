@@ -244,5 +244,38 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// GET /auth/me - Returns the currently logged-in user from session
+router.get('/me', (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({
+      success: false,
+      message: 'Not authenticated',
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    data: req.session.user,
+  });
+});
+
+// POST /auth/logout - Destroys the current session
+router.post('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: 'Logout failed',
+      });
+    }
+
+    res.clearCookie('connect.sid');
+    return res.status(200).json({
+      success: true,
+      message: 'Logged out',
+    });
+  });
+});
+
 module.exports = router;
 

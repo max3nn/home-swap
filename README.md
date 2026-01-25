@@ -171,8 +171,8 @@ When running with Docker Compose, the following services will be available:
 | ------------------ | ------------------------------- | -------------------------------------------------------------------- |
 | `PORT`             | Server port                     | `3000`                                                               |
 | `NODE_ENV`         | Environment mode                | `development`                                                        |
-| `MONGODB_URI`      | MongoDB connection string       | `mongodb://homeswap_user:homeswap_password@localhost:27017/homeswap` |
-| `MONGODB_TEST_URI` | Test database connection string | `mongodb://admin:password@localhost:27018/homeswap_test`             |
+| `MONGODB_URI`      | MongoDB connection string       | `mongodb://homeswap_user:homeswap_password@localhost:27017/homeswap?authSource=homeswap` |
+| `MONGODB_TEST_URI` | Test database connection string | `mongodb://admin:password@localhost:27018/homeswap_test?authSource=admin`             |
 | `SESSION_SECRET`   | Session encryption key          | `your-secret-key-here`                                               |
 
 ## Database Schema

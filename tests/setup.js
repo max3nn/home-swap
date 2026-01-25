@@ -13,7 +13,9 @@ global.console = {
 
 // Setup test database connection (only if MongoDB is available)
 beforeAll(async () => {
-  const mongoURI = process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/homeswap_test';
+  const mongoURI =
+    process.env.MONGODB_TEST_URI ||
+    'mongodb://admin:password@localhost:27018/homeswap_test?authSource=admin';
   
   try {
     // Only connect if MongoDB is available
