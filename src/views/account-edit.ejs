@@ -1,0 +1,57 @@
+<section class="container" style="padding: 28px 0 46px;">
+  <div class="row" style="margin: 0 auto; max-width: 920px;">
+    <div class="col s12">
+      <div style="display:flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px;">
+        <h3 style="margin: 0; font-weight: 900; letter-spacing: -0.02em; color: hsl(var(--foreground));">Edit Account</h3>
+        <a href="/account" class="btn-flat" style="color: hsl(var(--muted-foreground));">Back to account</a>
+      </div>
+
+      <% if (errors && errors.length > 0) { %>
+        <div style="background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px;">
+          <div style="font-weight: 800; color: #b91c1c; margin-bottom: 6px;">Please fix the following:</div>
+          <ul style="margin: 0; padding-left: 18px; color: #b91c1c;">
+            <% errors.forEach(function(err) { %>
+              <li><%= err %></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+
+      <div style="background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
+        <form method="POST" action="/account/edit">
+          <div class="row" style="margin-bottom: 0;">
+            <div class="input-field col s12 m6">
+              <input id="username" name="username" type="text" value="<%= profile && profile.username ? profile.username : '' %>" required />
+              <label class="active" for="username">Username</label>
+            </div>
+
+            <div class="input-field col s12 m6">
+              <input id="email" type="email" value="<%= profile && profile.email ? profile.email : '' %>" disabled />
+              <label class="active" for="email">Email (cannot be changed)</label>
+            </div>
+          </div>
+
+          <div class="row" style="margin-bottom: 0;">
+            <div class="input-field col s12 m6">
+              <input id="password" name="password" type="password" autocomplete="new-password" />
+              <label class="active" for="password">New Password (optional)</label>
+            </div>
+
+            <div class="input-field col s12 m6">
+              <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" />
+              <label class="active" for="confirmPassword">Confirm New Password</label>
+            </div>
+          </div>
+
+          <div style="display:flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+            <a href="/account" class="btn-flat" style="color: hsl(var(--muted-foreground));">Cancel</a>
+            <button type="submit" class="btn" style="background-color: hsl(var(--primary)); border-radius: 999px; box-shadow: none;">
+              <i class="material-icons left">save</i>
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

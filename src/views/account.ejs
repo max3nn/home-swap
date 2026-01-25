@@ -1,0 +1,55 @@
+<!-- Account/Profile Section -->
+<section style="padding: 56px 0; min-height: calc(100vh - 64px - 200px); background-color: hsl(var(--background));">
+  <div class="container">
+    <div class="row" style="margin-bottom: 18px;">
+      <div class="col s12">
+        <h2 style="font-size: 2rem; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 6px;">My Account</h2>
+        <p style="color: hsl(var(--muted-foreground)); margin: 0;">Your profile details.</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col s12">
+        <div style="background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 22px 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+          <div style="display:flex; align-items:center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+            <div style="display:flex; align-items:center; gap: 12px;">
+              <div style="width: 52px; height: 52px; border-radius: 50%; background-color: hsl(var(--muted)); display:flex; align-items:center; justify-content:center; border: 1px solid hsl(var(--border));">
+                <i class="material-icons" style="color: hsl(var(--muted-foreground)); font-size: 30px;">account_circle</i>
+              </div>
+              <div>
+                <div style="font-weight: 800; color: hsl(var(--foreground)); font-size: 1.25rem; line-height: 1.2;"><%= profile.username %></div>
+                <div style="color: hsl(var(--muted-foreground)); font-size: 0.9rem;">Role: <%= profile.userrole %></div>
+              </div>
+            </div>
+            <div style="display:flex; gap: 10px;">
+              <a href="/account/edit" class="btn" style="background-color: hsl(var(--primary)); border-radius: 999px; box-shadow: none;">
+                <i class="material-icons left">edit</i>
+                Edit Account
+              </a>
+            </div>
+          </div>
+
+          <div class="row" style="margin: 18px -0.75rem 0;">
+            <div class="col s12 m6" style="margin-bottom: 12px;">
+              <div style="background-color: hsl(var(--muted)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 16px;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: hsl(var(--muted-foreground));">Email</div>
+                <div style="color: hsl(var(--foreground)); font-weight: 600; font-size: 1rem; margin-top: 2px;"><%= profile.email %></div>
+              </div>
+            </div>
+            <div class="col s12 m6" style="margin-bottom: 12px;">
+              <div style="background-color: hsl(var(--muted)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 16px;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: hsl(var(--muted-foreground));">User ID</div>
+                <div style="color: hsl(var(--foreground)); font-weight: 600; font-size: 1rem; margin-top: 2px; word-break: break-all;"><%= profile.userId %></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 6px; color: hsl(var(--muted-foreground)); font-size: 0.9rem;">
+            Keep your profile information up to date.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
