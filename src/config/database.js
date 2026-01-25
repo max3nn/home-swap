@@ -2,7 +2,11 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/homeswap';
+    // docker-compose enables MongoDB authentication by default.
+    // If you don't provide MONGODB_URI, fall back to the application user created in docker/mongo-init.js.
+    const mongoURI =
+      process.env.MONGODB_URI ||
+      'mongodb://homeswap_user:homeswap_password@localhost:27017/homeswap?authSource=homeswap';
     
     const conn = await mongoose.connect(mongoURI);
     
