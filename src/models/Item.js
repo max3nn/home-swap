@@ -23,6 +23,23 @@ const itemSchema = new mongoose.Schema(
       required: false,
       trim: true,
     },
+    image: {
+      data: {
+        type: Buffer,
+        required: false,
+      },
+      contentType: {
+        type: String,
+        required: false,
+        trim: true,
+      },
+    },
+    hasImage: {
+      type: Boolean,
+      required: false,
+      default: false,
+      index: true,
+    },
     ownerId: {
       type: String,
       required: true,
