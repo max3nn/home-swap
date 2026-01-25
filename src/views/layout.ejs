@@ -409,6 +409,7 @@
                 <li><a href="#how-it-works">How It Works</a></li>
                 <li><a href="#about">About</a></li>
                 <% if (typeof user !== 'undefined' && user) { %>
+                    <li><a href="/search">Search</a></li>
                     <li>
                         <a class="dropdown-trigger" href="#!" data-target="user-dropdown" style="display: flex; align-items: center;">
                             <i class="material-icons" style="margin-right: 4px;">account_circle</i>
@@ -419,7 +420,7 @@
                     <!-- Dropdown Structure -->
                     <ul id="user-dropdown" class="dropdown-content">
                         <li><a href="#!"><i class="material-icons">person</i>Profile</a></li>
-                        <li><a href="#!"><i class="material-icons">exit_to_app</i>Logout</a></li>
+                        <li><a href="#" id="logout-link"><i class="material-icons">exit_to_app</i>Logout</a></li>
                     </ul>
                 <% } else { %>
                     <li><a href="/auth/login">Login</a></li>
@@ -486,6 +487,19 @@
                     }
                 });
             });
+
+            // Logout handler (POST /auth/logout)
+            const logoutLink = document.getElementById('logout-link');
+            if (logoutLink) {
+                logoutLink.addEventListener('click', async function (e) {
+                    e.preventDefault();
+                    try {
+                        await fetch('/auth/logout', { method: 'POST' });
+                    } finally {
+                        window.location.href = '/';
+                    }
+                });
+            }
         });
     </script>
 </body>

@@ -1,0 +1,154 @@
+<!-- Search Section -->
+<section style="padding: 56px 0; min-height: calc(100vh - 64px - 200px); background-color: hsl(var(--background));">
+  <div class="container">
+    <div class="row" style="margin-bottom: 12px;">
+      <div class="col s12">
+        <h2 style="font-size: 2rem; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 6px;">Search Items</h2>
+        <p style="color: hsl(var(--muted-foreground)); margin: 0;">Find items to swap in your community.</p>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 6px;">
+      <!-- Sidebar filters -->
+      <div class="col s12 m4 l3">
+        <div style="position: sticky; top: 84px; background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 18px 18px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+          <h5 style="margin: 0 0 14px; font-weight: 700; color: hsl(var(--foreground)); font-size: 1.05rem;">Search & Filters</h5>
+          <form method="GET" action="/search" style="margin: 0;">
+            <div class="input-field" style="margin-top: 0;">
+              <i class="material-icons prefix" style="color: hsl(var(--muted-foreground));">search</i>
+              <input id="q" name="q" type="text" value="<%= q || '' %>" />
+              <label for="q" class="active">Search</label>
+              <span class="helper-text" style="color: hsl(var(--muted-foreground));">Title or description</span>
+            </div>
+
+            <div class="input-field">
+              <i class="material-icons prefix" style="color: hsl(var(--muted-foreground));">sell</i>
+              <select id="offer" name="offer">
+                <option value="" <%= !offer ? 'selected' : '' %>>Any</option>
+                <% (categories || []).forEach(function(cat) { %>
+                  <option value="<%= cat %>" <%= offer === cat ? 'selected' : '' %>><%= cat %></option>
+                <% }); %>
+              </select>
+              <span class="helper-text" style="color: hsl(var(--muted-foreground));">Category of the item listed</span>
+            </div>
+
+            <div class="input-field">
+              <i class="material-icons prefix" style="color: hsl(var(--muted-foreground));">swap_horiz</i>
+              <select id="want" name="want">
+                <option value="" <%= !want ? 'selected' : '' %>>Any</option>
+                <% (categories || []).forEach(function(cat) { %>
+                  <option value="<%= cat %>" <%= want === cat ? 'selected' : '' %>><%= cat %></option>
+                <% }); %>
+              </select>
+              <span class="helper-text" style="color: hsl(var(--muted-foreground));">What category the owner wants</span>
+            </div>
+
+            <div style="display:flex; gap: 10px; margin-top: 14px;">
+              <button type="submit" class="btn-primary waves-effect waves-light" style="flex: 1;">
+                Apply
+              </button>
+              <a href="/search" class="btn-secondary waves-effect waves-light" style="flex: 1; text-align: center;">
+                Clear
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="col s12 m8 l9">
+        <div class="row" style="margin-top: 0; margin-bottom: 8px;">
+          <div class="col s12" style="display:flex; justify-content: space-between; align-items:center; gap: 12px;">
+            <div style="color: hsl(var(--muted-foreground)); font-size: 0.95rem;">
+              <%= typeof resultCount === 'number' ? resultCount : (items ? items.length : 0) %> result(s)
+              <% if (q) { %>
+                for "<%= q %>"
+              <% } %>
+              <% if (offer) { %>
+                • on offer: "<%= offer %>"
+              <% } %>
+              <% if (want) { %>
+                • wants: "<%= want %>"
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top: 10px;">
+          <% if (!items || items.length === 0) { %>
+            <div class="col s12">
+              <div style="background-color: hsl(var(--muted)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 24px;">
+                <h5 style="margin: 0 0 8px; font-weight: 600; color: hsl(var(--foreground));">No items found</h5>
+                <p style="margin: 0; color: hsl(var(--muted-foreground));">Try a different search term, or clear filters to browse everything.</p>
+              </div>
+            </div>
+          <% } else { %>
+            <% items.forEach(function(item) { %>
+              <div class="col s12 m6 l4" style="margin-bottom: 18px;">
+                <div style="height: 100%; background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+                  <div style="height: 180px; background-color: hsl(var(--muted)); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                    <% if (item.imageUrl) { %>
+                      <img src="<%= item.imageUrl %>" alt="<%= item.title %>" style="width: 100%; height: 100%; object-fit: cover;" />
+                    <% } else { %>
+                      <i class="material-icons" style="font-size: 64px; color: hsl(var(--muted-foreground)); opacity: 0.6;">image</i>
+                    <% } %>
+                  </div>
+
+                  <div style="padding: 16px 16px 14px;">
+                    <div style="display:flex; align-items:flex-start; justify-content: space-between; gap: 10px;">
+                      <h5 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: hsl(var(--foreground)); line-height: 1.25;">
+                        <%= item.title %>
+                      </h5>
+                      <% if (item.itemType) { %>
+                        <span style="font-size: 0.75rem; padding: 6px 10px; border-radius: 999px; background-color: hsl(var(--muted)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); white-space: nowrap;">
+                          <%= item.itemType %>
+                        </span>
+                      <% } %>
+                    </div>
+
+                    <p style="margin: 10px 0 0; color: hsl(var(--muted-foreground)); font-size: 0.9rem; line-height: 1.5;">
+                      <%= (item.description || '').length > 140 ? (item.description.slice(0, 140) + '…') : (item.description || '') %>
+                    </p>
+
+                    <% if (item.wantedCategories && item.wantedCategories.length > 0) { %>
+                      <div style="margin-top: 12px; display:flex; flex-wrap: wrap; gap: 8px;">
+                        <span style="font-size: 0.75rem; color: hsl(var(--muted-foreground));">Wants:</span>
+                        <% item.wantedCategories.slice(0, 4).forEach(function(w) { %>
+                          <span style="font-size: 0.75rem; padding: 6px 10px; border-radius: 999px; background-color: hsl(var(--accent)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border));">
+                            <%= w %>
+                          </span>
+                        <% }); %>
+                        <% if (item.wantedCategories.length > 4) { %>
+                          <span style="font-size: 0.75rem; color: hsl(var(--muted-foreground));">+<%= item.wantedCategories.length - 4 %> more</span>
+                        <% } %>
+                      </div>
+                    <% } %>
+
+                    <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 14px;">
+                      <div style="color: hsl(var(--muted-foreground)); font-size: 0.8rem;">
+                        Owner: <%= item.ownerId %>
+                      </div>
+                      <button class="btn-secondary waves-effect waves-light" disabled style="opacity: 0.75;">
+                        Request Swap
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const selects = document.querySelectorAll('select');
+    if (window.M && selects && selects.length) {
+      M.FormSelect.init(selects);
+    }
+  });
+</script>

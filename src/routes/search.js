@@ -1,0 +1,67 @@
+const express = require('express');
+const mongoose = require('mongoose');
+const Item = require('../models/Item');
+const { ITEM_CATEGORIES, normalizeCategory, isValidCategory } = require('../config/itemCategories');
+
+const router = express.Router();
+
+router.use((req, res, next) => {
+  if (!req.session.user) {
+    return res.redirect('/auth/login');
+  }
+  next();
+});
+
+// GET /search - Search/browse items
+router.get('/', async (req, res, next) => {
+  try {
+    const q = (req.query.q || '').toString().trim();
+    // Back-compat: `type` was the original query param for the offered category
+    const offer = normalizeCategory(req.query.offer || req.query.type || '');
+    const want = normalizeCategory(req.query.want || '');
+
+    if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+      return res.status(503).render('error', {
+        title: 'Search Unavailable',
+        message: 'Database connection unavailable. Please try again later.',
+        error: {},
+      });
+    }
+
+    const filter = {};
+
+    const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    if (q) {
+      const regex = new RegExp(escapeRegex(q), 'i');
+      filter.$or = [{ title: regex }, { description: regex }];
+    }
+
+    if (offer && isValidCategory(offer)) {
+      filter.itemType = new RegExp(`^${escapeRegex(offer)}$`, 'i');
+    }
+
+    if (want && isValidCategory(want)) {
+      filter.wantedCategories = new RegExp(`^${escapeRegex(want)}$`, 'i');
+    }
+
+    const items = await Item.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean();
+
+    return res.render('search', {
+      title: 'Search Items',
+      items,
+      q,
+      offer,
+      want,
+      categories: ITEM_CATEGORIES,
+      resultCount: items.length,
+    });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+module.exports = router;
