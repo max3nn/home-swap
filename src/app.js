@@ -52,6 +52,10 @@ app.use('/auth', authRoutes);
 const searchRoutes = require('./routes/search');
 app.use('/search', searchRoutes);
 
+// Account routes (requires login in the router)
+const accountRoutes = require('./routes/account');
+app.use('/account', accountRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
