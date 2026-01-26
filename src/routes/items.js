@@ -116,7 +116,10 @@ router.get('/:itemId/image', async (req, res, next) => {
 
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', 'inline');
-    res.setHeader('Cache-Control', 'private, max-age=3600');
+    // Use no-cache to ensure updated images are shown immediately
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     return res.status(200).send(data);
   } catch (err) {
     return next(err);
@@ -204,6 +207,170 @@ router.post('/new', upload.single('image'), async (req, res, next) => {
       wantedCategories,
     });
 
+    console.log(`[ITEM_CREATE] User ${user.userId} created item ${itemId}`);
+    return res.redirect('/search');
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// GET /items/:itemId/edit - Render edit form
+router.get('/:itemId/edit', async (req, res, next) => {
+  try {
+    if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+      return res.status(503).render('error', {
+        title: 'Edit Unavailable',
+        message: 'Database connection unavailable. Please try again later.',
+        error: {},
+      });
+    }
+
+    const itemId = (req.params.itemId || '').trim();
+    if (!itemId) {
+      return res.status(400).render('error', {
+        title: 'Invalid Item',
+        message: 'Item ID is required.',
+        error: {},
+      });
+    }
+
+    const user = req.session.user;
+    const item = await Item.findOne({ itemId }).lean();
+
+    if (!item) {
+      return res.status(404).render('error', {
+        title: 'Item Not Found',
+        message: 'The item you are trying to edit does not exist.',
+        error: {},
+      });
+    }
+
+    // Verify that the user is the owner
+    if (item.ownerId !== user.userId) {
+      console.log(`[ITEM_EDIT_ATTEMPT] User ${user.userId} attempted to edit item ${itemId} owned by ${item.ownerId}`);
+      return res.status(403).render('error', {
+        title: 'Access Denied',
+        message: 'You can only edit your own items.',
+        error: {},
+      });
+    }
+
+
+    return res.render('item-edit', {
+      title: 'Edit Item',
+      categories: ITEM_CATEGORIES,
+      item,
+      errors: [],
+      values: {
+        title: item.title || '',
+        description: item.description || '',
+        itemType: item.itemType || '',
+        wantedCategories: item.wantedCategories || [],
+      },
+    });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// POST /items/:itemId/edit - Update an item
+router.post('/:itemId/edit', upload.single('image'), async (req, res, next) => {
+  try {
+    if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+      return res.status(503).render('error', {
+        title: 'Edit Unavailable',
+        message: 'Database connection unavailable. Please try again later.',
+        error: {},
+      });
+    }
+
+    const itemId = (req.params.itemId || '').trim();
+    if (!itemId) {
+      return res.status(400).render('error', {
+        title: 'Invalid Item',
+        message: 'Item ID is required.',
+        error: {},
+      });
+    }
+
+    const user = req.session.user;
+    // Fetch item without lean() to get a Mongoose document
+    const item = await Item.findOne({ itemId });
+
+    if (!item) {
+      return res.status(404).render('error', {
+        title: 'Item Not Found',
+        message: 'The item you are trying to edit does not exist.',
+        error: {},
+      });
+    }
+
+    // Verify that the user is the owner
+    if (item.ownerId !== user.userId) {
+      console.log(`[ITEM_EDIT_ATTEMPT] User ${user.userId} attempted to edit item ${itemId} owned by ${item.ownerId}`);
+      return res.status(403).render('error', {
+        title: 'Access Denied',
+        message: 'You can only edit your own items.',
+        error: {},
+      });
+    }
+
+    const errors = [];
+
+    const title = (req.body.title || '').trim();
+    const description = (req.body.description || '').trim();
+    const itemTypeRaw = (req.body.itemType || '').trim();
+
+    let wanted = req.body.wantedCategories || [];
+    if (typeof wanted === 'string') wanted = [wanted];
+    const wantedCategories = (wanted || [])
+      .map((c) => normalizeCategory(c))
+      .filter((c) => c && isValidCategory(c));
+
+    const itemType = isValidCategory(itemTypeRaw) ? normalizeCategory(itemTypeRaw) : '';
+
+    if (!title) errors.push('Title is required');
+    if (!description) errors.push('Description is required');
+
+    if (errors.length > 0) {
+      return res.status(400).render('item-edit', {
+        title: 'Edit Item',
+        categories: ITEM_CATEGORIES,
+        item,
+        errors,
+        values: { title, description, itemType: itemTypeRaw, wantedCategories: wanted || [] },
+      });
+    }
+
+    // Update using the document directly - this is more reliable for Buffer types
+    item.title = title;
+    item.description = description;
+    item.itemType = itemType || undefined;
+    item.wantedCategories = wantedCategories;
+    
+    // Update image if a new one was uploaded
+    if (req.file && req.file.buffer) {
+      // Ensure image object exists
+      if (!item.image) {
+        item.image = {};
+      }
+      
+      // Set nested fields directly
+      item.image.data = req.file.buffer;
+      item.image.contentType = req.file.mimetype || 'application/octet-stream';
+      item.hasImage = true;
+      // Add timestamp to imageUrl to force browser cache refresh
+      item.imageUrl = `/items/${itemId}/image?v=${Date.now()}`;
+      
+      // Mark the entire image object as modified
+      item.markModified('image');
+    }
+
+    // Save the document
+    await item.save();
+
+    console.log(`[ITEM_EDIT] User ${user.userId} updated item ${itemId}`);
+
     return res.redirect('/search');
   } catch (err) {
     return next(err);
@@ -211,33 +378,38 @@ router.post('/new', upload.single('image'), async (req, res, next) => {
 });
 
 // Multer / upload error handler
-router.use((err, req, res, next) => {
+router.use(async (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).render('item-new', {
-        title: 'Post Item',
-        categories: ITEM_CATEGORIES,
-        errors: ['Image file is too large (max 10MB). Please choose a smaller image.'],
-        values: {
-          title: (req.body && req.body.title) || '',
-          description: (req.body && req.body.description) || '',
-          itemType: (req.body && req.body.itemType) || '',
-          wantedCategories: (req.body && req.body.wantedCategories) || [],
-        },
-      });
+    const isEditRoute = req.path.includes('/edit');
+    const viewName = isEditRoute ? 'item-edit' : 'item-new';
+    const title = isEditRoute ? 'Edit Item' : 'Post Item';
+    
+    let item = null;
+    if (isEditRoute && req.params.itemId) {
+      try {
+        item = await Item.findOne({ itemId: req.params.itemId }).lean();
+      } catch {
+        // Ignore error, item will be null
+      }
     }
 
-    return res.status(400).render('item-new', {
-      title: 'Post Item',
+    const renderData = {
+      title,
       categories: ITEM_CATEGORIES,
-      errors: ['Upload failed. Please try again.'],
+      errors: err.code === 'LIMIT_FILE_SIZE' 
+        ? ['Image file is too large (max 10MB). Please choose a smaller image.']
+        : ['Upload failed. Please try again.'],
       values: {
         title: (req.body && req.body.title) || '',
         description: (req.body && req.body.description) || '',
         itemType: (req.body && req.body.itemType) || '',
         wantedCategories: (req.body && req.body.wantedCategories) || [],
       },
-    });
+    };
+    if (isEditRoute && item) {
+      renderData.item = item;
+    }
+    return res.status(400).render(viewName, renderData);
   }
 
   return next(err);
