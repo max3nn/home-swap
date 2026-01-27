@@ -1,4 +1,4 @@
-const SwapRequest = require('../models/SwapRequests');
+const SwapRequest = require('../models/SwapRequest');
 const mongoose = require('mongoose');
 
 const seedSwapRequests = async () => {

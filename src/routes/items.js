@@ -302,10 +302,13 @@ router.get('/:itemId', async (req, res, next) => {
 
     // Get swap requests for this item (if user is the owner)
     let swapRequests = [];
-    if (req.session.user.userId === itemWithOwner.ownerId) {
-      const SwapRequests = require('../models/SwapRequests');
+    let outgoingSwapRequests = [];
+    let hasPendingSwaps = false;
 
-      const requests = await SwapRequests.find({ itemId }).lean();
+    if (req.session.user.userId === itemWithOwner.ownerId) {
+      const SwapRequest = require('../models/SwapRequest');
+
+      const requests = await SwapRequest.find({ itemId }).lean();
 
       // Get offered items and requester info
       const offeredItemIds = requests.map(r => r.offeredItemId);
@@ -331,10 +334,55 @@ router.get('/:itemId', async (req, res, next) => {
       }));
     }
 
+    // Get outgoing swap requests (where this item is being offered)
+    if (req.session.user.userId === itemWithOwner.ownerId) {
+      const SwapRequest = require('../models/SwapRequest');
+      const outgoingRequests = await SwapRequest.find({
+        offeredItemId: itemId,
+        ownerId: req.session.user.userId
+      }).lean();
+
+      // Get target items and their owners for outgoing requests
+      const targetItemIds = outgoingRequests.map(r => r.itemId);
+      const targetItems = await Item.find({ itemId: { $in: targetItemIds } }).lean();
+      const targetItemOwnerIds = [...new Set(targetItems.map(item => item.ownerId))];
+      const targetItemOwners = await User.find({ userId: { $in: targetItemOwnerIds } }, { username: 1, userId: 1 }).lean();
+
+      const targetItemsMap = targetItems.reduce((acc, item) => {
+        acc[item.itemId] = item;
+        return acc;
+      }, {});
+
+      const targetOwnersMap = targetItemOwners.reduce((acc, user) => {
+        acc[user.userId] = user.username;
+        return acc;
+      }, {});
+
+      outgoingSwapRequests = outgoingRequests.map(request => ({
+        ...request,
+        targetItem: {
+          ...targetItemsMap[request.itemId],
+          ownerName: targetOwnersMap[targetItemsMap[request.itemId]?.ownerId] || 'Unknown User'
+        }
+      }));
+    }
+
+    // Check if item has any pending swap requests (as target or offered item)
+    const SwapRequest = require('../models/SwapRequest');
+    const pendingCount = await SwapRequest.countDocuments({
+      $or: [
+        { itemId: itemId, status: 'pending' },
+        { offeredItemId: itemId, status: 'pending' }
+      ]
+    });
+    hasPendingSwaps = pendingCount > 0;
+
     return res.render('item-detail', {
       title: itemWithOwner.title,
       item: itemWithOwner,
       swapRequests,
+      outgoingSwapRequests,
+      hasPendingSwaps,
       isOwner: req.session.user.userId === itemWithOwner.ownerId
     });
   } catch (err) {

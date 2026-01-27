@@ -65,10 +65,26 @@ router.get('/', async (req, res, next) => {
       return map;
     }, {});
 
-    // Add owner names to items
+    // Check for pending swap requests for all items
+    const SwapRequest = require('../models/SwapRequest');
+    const itemIds = items.map(item => item.itemId);
+    const pendingSwaps = await SwapRequest.find({
+      $or: [
+        { itemId: { $in: itemIds }, status: 'pending' },
+        { offeredItemId: { $in: itemIds }, status: 'pending' }
+      ]
+    }).lean();
+
+    const pendingItemIds = new Set([
+      ...pendingSwaps.map(swap => swap.itemId),
+      ...pendingSwaps.map(swap => swap.offeredItemId)
+    ]);
+
+    // Add owner names and pending status to items
     const itemsWithOwnerNames = items.map(item => ({
       ...item,
-      ownerName: ownerMap[item.ownerId] || 'Unknown User'
+      ownerName: ownerMap[item.ownerId] || 'Unknown User',
+      hasPendingSwaps: pendingItemIds.has(item.itemId)
     }));
 
     return res.render('search', {

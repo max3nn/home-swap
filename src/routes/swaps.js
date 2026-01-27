@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 
-const SwapRequests = require('../models/SwapRequests');
+const SwapRequest = require('../models/SwapRequest');
 const Item = require('../models/Item');
 const User = require('../models/User');
 const { createItem } = require('./items');
@@ -121,33 +121,6 @@ router.post('/request/:itemId', upload.single('image'), async (req, res, next) =
             errors.push('Message must be less than 1000 characters.');
         }
 
-        // Validate new item creation if that option is selected
-        if (createNewItem) {
-            if (!title || title.trim().length < 1) {
-                errors.push('Item title is required.');
-            }
-            if (title && title.length > 100) {
-                errors.push('Item title must be less than 100 characters.');
-            }
-            if (!description || description.trim().length < 1) {
-                errors.push('Item description is required.');
-            }
-            if (description && description.length > 1000) {
-                errors.push('Item description must be less than 1000 characters.');
-            }
-            if (!itemType || itemType.trim().length < 1) {
-                errors.push('Item category is required.');
-            }
-            // Validate image URL if provided
-            if (imageUrl && imageUrl.trim().length > 0) {
-                try {
-                    new URL(imageUrl.trim());
-                } catch {
-                    errors.push('Please enter a valid image URL.');
-                }
-            }
-        }
-
         // Get the target item
         const targetItem = await Item.findOne({ itemId }).lean();
         if (!targetItem) {
@@ -180,15 +153,14 @@ router.post('/request/:itemId', upload.single('image'), async (req, res, next) =
 
         if (createNewItem) {
             // Create a new item using shared function
-            const itemResult = await createItem(req, {
+            const itemResult = await createItem({
                 title: title?.trim(),
                 description: description?.trim(),
-                category: itemType?.trim(),
-                image_url: imageUrl?.trim(),
-                file: req.file
-            });
+                itemType: itemType?.trim(),
+                ownerId: req.session.user.userId
+            }, req.file, imageUrl?.trim());
 
-            if (itemResult.errors.length > 0) {
+            if (!itemResult.success) {
                 errors.push(...itemResult.errors);
             } else {
                 offeredItem = itemResult.item;
@@ -218,7 +190,7 @@ router.post('/request/:itemId', upload.single('image'), async (req, res, next) =
         }
 
         // Check for existing swap request
-        const existingRequest = await SwapRequests.findOne({
+        const existingRequest = await SwapRequest.findOne({
             itemId: targetItem.itemId,
             ownerId: req.session.user.userId,
             offeredItemId: offeredItem.itemId
@@ -239,7 +211,7 @@ router.post('/request/:itemId', upload.single('image'), async (req, res, next) =
         }
 
         // Create swap request
-        const swapRequest = new SwapRequests({
+        const swapRequest = new SwapRequest({
             swapRequestId: uuidv4(),
             itemId: targetItem.itemId,
             message: message.trim(),
@@ -271,7 +243,7 @@ router.get('/my-requests', async (req, res, next) => {
         }
 
         // Get user's swap requests
-        const swapRequests = await SwapRequests.find({
+        const swapRequests = await SwapRequest.find({
             ownerId: req.session.user.userId
         }).lean();
 
@@ -334,7 +306,7 @@ router.get('/received', async (req, res, next) => {
         const userItemIds = userItems.map(item => item.itemId);
 
         // Get swap requests for user's items
-        const swapRequests = await SwapRequests.find({
+        const swapRequests = await SwapRequest.find({
             itemId: { $in: userItemIds }
         }).lean();
 
@@ -389,7 +361,7 @@ router.post('/:swapRequestId/accept', async (req, res, next) => {
             });
         }
 
-        const swapRequest = await SwapRequests.findOne({ swapRequestId });
+        const swapRequest = await SwapRequest.findOne({ swapRequestId });
         if (!swapRequest) {
             return res.status(404).render('error', {
                 title: 'Swap Request Not Found',
@@ -409,7 +381,7 @@ router.post('/:swapRequestId/accept', async (req, res, next) => {
         }
 
         // Update the swap request status
-        await SwapRequests.updateOne(
+        await SwapRequest.updateOne(
             { swapRequestId },
             {
                 status: 'accepted',
@@ -446,7 +418,7 @@ router.post('/:swapRequestId/reject', async (req, res, next) => {
             });
         }
 
-        const swapRequest = await SwapRequests.findOne({ swapRequestId });
+        const swapRequest = await SwapRequest.findOne({ swapRequestId });
         if (!swapRequest) {
             return res.status(404).render('error', {
                 title: 'Swap Request Not Found',
@@ -466,7 +438,7 @@ router.post('/:swapRequestId/reject', async (req, res, next) => {
         }
 
         // Update the swap request status
-        await SwapRequests.updateOne(
+        await SwapRequest.updateOne(
             { swapRequestId },
             {
                 status: 'rejected',
@@ -494,7 +466,7 @@ router.post('/:swapRequestId/cancel', async (req, res, next) => {
             });
         }
 
-        const swapRequest = await SwapRequests.findOne({ swapRequestId });
+        const swapRequest = await SwapRequest.findOne({ swapRequestId });
         if (!swapRequest) {
             return res.status(404).render('error', {
                 title: 'Swap Request Not Found',
@@ -522,7 +494,7 @@ router.post('/:swapRequestId/cancel', async (req, res, next) => {
         }
 
         // Update the swap request status
-        await SwapRequests.updateOne(
+        await SwapRequest.updateOne(
             { swapRequestId },
             {
                 status: 'cancelled',

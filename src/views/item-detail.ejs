@@ -14,7 +14,21 @@
           </div>
         </nav>
         <h2 style="font-size: 2rem; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 6px;"><%= item.title %></h2>
-        <p style="color: hsl(var(--muted-foreground)); margin: 0;">Item details and swap requests.</p>
+        <p style="color: hsl(var(--muted-foreground)); margin: 0 0 8px;">Item details and swap requests.</p>
+        <% if (hasPendingSwaps && item.status !== 'swapped') { %>
+          <div style="margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; padding: 8px 12px; border-radius: 999px; background-color: #f59e0b; color: white; border: 1px solid #d97706; white-space: nowrap; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              Pending Swap
+            </span>
+          </div>
+        <% } %>
+        <% if (item.status === 'swapped') { %>
+          <div style="margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; padding: 8px 12px; border-radius: 999px; background-color: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); border: 1px solid hsl(var(--border)); white-space: nowrap; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              Swapped
+            </span>
+          </div>
+        <% } %>
       </div>
     </div>
 
@@ -37,11 +51,13 @@
             <h3 style="margin: 0; font-size: 1.8rem; font-weight: 700; color: hsl(var(--foreground)); line-height: 1.25;">
               <%= item.title %>
             </h3>
-            <% if (item.itemType) { %>
-              <span style="font-size: 0.8rem; padding: 8px 12px; border-radius: 999px; background-color: hsl(var(--muted)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); white-space: nowrap;">
-                <%= item.itemType %>
-              </span>
-            <% } %>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <% if (item.itemType) { %>
+                <span style="font-size: 0.8rem; padding: 8px 12px; border-radius: 999px; background-color: hsl(var(--muted)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); white-space: nowrap;">
+                  <%= item.itemType %>
+                </span>
+              <% } %>
+            </div>
           </div>
 
           <!-- Description -->
@@ -119,7 +135,7 @@
                       <%= request.status %>
                     </span>
                     <div style="color: hsl(var(--muted-foreground)); font-size: 0.7rem;">
-                      <%= new Date(request.createdAt).toLocaleDateString() %>
+                      <%= new Date(request.createdAt).toLocaleDateString('en-AU') %>
                     </div>
                   </div>
 
@@ -198,6 +214,71 @@
         </div>
       <% } %>
     </div>
+
+    <!-- Outgoing Swap Requests (Where this item is being offered) -->
+    <% if (isOwner && outgoingSwapRequests && outgoingSwapRequests.length > 0) { %>
+      <div class="row" style="margin-top: 20px;">
+        <div class="col s12">
+          <div style="background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+            <h5 style="margin: 0 0 16px; font-weight: 700; color: hsl(var(--foreground)); font-size: 1.2rem;">
+              <i class="material-icons" style="vertical-align: middle; margin-right: 8px; color: hsl(var(--primary));">send</i>
+              Outgoing Swap Requests (Using This Item)
+            </h5>
+            
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <% outgoingSwapRequests.forEach(function(request) { %>
+                <div style="padding: 16px; background-color: hsl(var(--muted)); border: 1px solid hsl(var(--border)); border-radius: var(--radius);">
+                  
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 12px;">
+                    <div>
+                      <h6 style="margin: 0 0 4px; font-weight: 600; color: hsl(var(--foreground)); font-size: 1rem;">
+                        Requesting: <%= request.targetItem.title %>
+                      </h6>
+                      <p style="margin: 0; color: hsl(var(--muted-foreground)); font-size: 0.85rem;">
+                        Owner: <%= request.targetItem.ownerName %>
+                      </p>
+                    </div>
+                    
+                    <div style="text-align: right;">
+                      <span style="font-size: 0.75rem; padding: 4px 8px; border-radius: 999px; 
+                        background-color: <%= request.status === 'pending' ? 'hsl(var(--accent))' : request.status === 'accepted' ? '#10b981' : request.status === 'rejected' ? '#ef4444' : '#6b7280' %>; 
+                        color: white; white-space: nowrap;">
+                        <%= request.status.charAt(0).toUpperCase() + request.status.slice(1) %>
+                      </span>
+                      <div style="color: hsl(var(--muted-foreground)); font-size: 0.8rem; margin-top: 4px;">
+                        <%= new Date(request.createdAt).toLocaleDateString('en-GB') %>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="color: hsl(var(--muted-foreground)); font-size: 0.9rem; margin-bottom: 12px;">
+                    <strong>Your message:</strong> "<%= request.message %>"
+                  </div>
+
+                  <% if (request.status === 'pending') { %>
+                    <div style="text-align: right;">
+                      <form method="POST" action="/swaps/<%= request.swapRequestId %>/cancel" style="display: inline;" onsubmit="return confirm('Cancel this swap request?')">
+                        <button type="submit" class="btn waves-effect waves-light" style="background-color: #6b7280; padding: 0 12px; height: 32px; line-height: 32px; font-size: 0.8rem; border-radius: 999px; box-shadow: none;">
+                          <i class="material-icons left" style="font-size: 14px;">cancel</i>
+                          Cancel Request
+                        </button>
+                      </form>
+                    </div>
+                  <% } %>
+
+                </div>
+              <% }); %>
+            </div>
+
+            <div style="margin-top: 16px; text-align: center;">
+              <a href="/swaps/my-requests" class="btn-secondary waves-effect waves-light" style="font-size: 0.9rem; padding: 0 16px; height: 36px; line-height: 34px;">
+                View All My Requests
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% } %>
 
   </div>
 </section>
