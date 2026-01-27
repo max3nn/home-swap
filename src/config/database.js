@@ -6,7 +6,7 @@ const connectDB = async () => {
     // If you don't provide MONGODB_URI, fall back to the application user created in docker/mongo-init.js.
     const mongoURI =
       process.env.MONGODB_URI ||
-      'mongodb://homeswap_user:homeswap_password@localhost:27017/homeswap?authSource=homeswap';
+      'mongodb://localhost:27017/homeswap';
     
     const conn = await mongoose.connect(mongoURI);
     

@@ -124,13 +124,20 @@
                       </div>
                     <% } %>
 
-                    <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 14px;">
-                      <div style="color: hsl(var(--muted-foreground)); font-size: 0.8rem;">
+                    <div style="margin-top: 14px;">
+                      <div style="color: hsl(var(--muted-foreground)); font-size: 0.8rem; margin-bottom: 10px;">
                         Owner: <%= item.ownerId %>
                       </div>
-                      <button class="btn-secondary waves-effect waves-light" disabled style="opacity: 0.75;">
-                        Request Swap
-                      </button>
+                      <div style="display:flex; gap: 8px; align-items:center; flex-wrap: wrap;">
+                        <% if (user && user.userId === item.ownerId) { %>
+                          <a href="/items/<%= item.itemId %>/edit" class="btn-primary waves-effect waves-light" style="white-space: nowrap;">
+                            Edit
+                          </a>
+                        <% } %>
+                        <button class="btn-secondary waves-effect waves-light" disabled style="opacity: 0.75;">
+                          Request Swap
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
