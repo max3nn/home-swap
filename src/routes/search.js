@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const Item = require('../models/Item');
+const User = require('../models/User');
 const { ITEM_CATEGORIES, normalizeCategory, isValidCategory } = require('../config/itemCategories');
 
 const router = express.Router();
@@ -56,15 +57,29 @@ router.get('/', async (req, res, next) => {
       .limit(50)
       .lean();
 
+    // Get unique owner IDs and fetch user information
+    const ownerIds = [...new Set(items.map(item => item.ownerId))];
+    const owners = await User.find({ userId: { $in: ownerIds } }, { username: 1, userId: 1 }).lean();
+    const ownerMap = owners.reduce((map, owner) => {
+      map[owner.userId] = owner.username;
+      return map;
+    }, {});
+
+    // Add owner names to items
+    const itemsWithOwnerNames = items.map(item => ({
+      ...item,
+      ownerName: ownerMap[item.ownerId] || 'Unknown User'
+    }));
+
     return res.render('search', {
       title: 'Search Items',
-      items,
+      items: itemsWithOwnerNames,
       q,
       offer,
       want,
       includeSwapped,
       categories: ITEM_CATEGORIES,
-      resultCount: items.length,
+      resultCount: itemsWithOwnerNames.length,
     });
   } catch (err) {
     return next(err);

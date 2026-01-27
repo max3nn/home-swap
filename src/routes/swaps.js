@@ -53,8 +53,16 @@ router.get('/request/:itemId', async (req, res, next) => {
             });
         }
 
+        // Get the owner information
+        const User = require('../models/User');
+        const owner = await User.findOne({ userId: item.ownerId }, { username: 1, userId: 1 }).lean();
+        const itemWithOwner = {
+            ...item,
+            ownerName: owner ? owner.username : 'Unknown User'
+        };
+
         // Prevent swapping with already swapped items
-        if (item.status === 'swapped') {
+        if (itemWithOwner.status === 'swapped') {
             return res.status(400).render('error', {
                 title: 'Item Already Swapped',
                 message: 'This item has already been swapped and is no longer available.',
@@ -63,7 +71,7 @@ router.get('/request/:itemId', async (req, res, next) => {
         }
 
         // Prevent users from requesting to swap with their own items
-        if (item.ownerId === req.session.user.userId) {
+        if (itemWithOwner.ownerId === req.session.user.userId) {
             return res.status(400).render('error', {
                 title: 'Invalid Request',
                 message: 'You cannot request to swap with your own item.',
@@ -77,7 +85,7 @@ router.get('/request/:itemId', async (req, res, next) => {
 
         res.render('swap-request', {
             title: 'Request Swap',
-            item,
+            item: itemWithOwner,
             userItems,
             categories: ITEM_CATEGORIES,
             errors: [],
@@ -251,11 +259,26 @@ router.get('/my-requests', async (req, res, next) => {
             return acc;
         }, {});
 
-        // Enrich swap requests with item data
+        // Get owner information for all items
+        const ownerIds = [...new Set(items.map(item => item.ownerId))];
+        const User = require('../models/User');
+        const owners = await User.find({ userId: { $in: ownerIds } }, { username: 1, userId: 1 }).lean();
+        const ownerMap = owners.reduce((map, owner) => {
+            map[owner.userId] = owner.username;
+            return map;
+        }, {});
+
+        // Enrich swap requests with item data and owner names
         const enrichedRequests = swapRequests.map(request => ({
             ...request,
-            targetItem: itemsMap[request.itemId],
-            offeredItem: itemsMap[request.offeredItemId]
+            targetItem: {
+                ...itemsMap[request.itemId],
+                ownerName: ownerMap[itemsMap[request.itemId]?.ownerId] || 'Unknown User'
+            },
+            offeredItem: {
+                ...itemsMap[request.offeredItemId],
+                ownerName: ownerMap[itemsMap[request.offeredItemId]?.ownerId] || 'Unknown User'
+            }
         }));
 
         res.render('swap-my-requests', {
