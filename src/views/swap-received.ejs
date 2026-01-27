@@ -33,7 +33,7 @@
                   <div>
                     <div style="font-weight: 600; color: hsl(var(--foreground));"><%= request.requester ? request.requester.username : 'Unknown User' %></div>
                     <div style="color: hsl(var(--muted-foreground)); font-size: 0.8rem;">
-                      <%= new Date(request.createdAt).toLocaleDateString() %>
+                      <%= new Date(request.createdAt).toLocaleDateString('en-AU') %>
                     </div>
                   </div>
                 </div>
@@ -138,14 +138,14 @@
                 <div style="margin-top: 16px; padding: 12px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: var(--radius);">
                   <div style="color: #155724; font-size: 0.9rem;">
                     <i class="material-icons" style="font-size: 16px; vertical-align: text-bottom; margin-right: 4px;">check_circle</i>
-                    You accepted this swap on <%= new Date(request.acceptedAt).toLocaleDateString() %>
+                    You accepted this swap on <%= new Date(request.acceptedAt).toLocaleDateString('en-AU') %>
                   </div>
                 </div>
               <% } else if (request.status === 'rejected' && request.rejectedAt) { %>
                 <div style="margin-top: 16px; padding: 12px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: var(--radius);">
                   <div style="color: #721c24; font-size: 0.9rem;">
                     <i class="material-icons" style="font-size: 16px; vertical-align: text-bottom; margin-right: 4px;">cancel</i>
-                    You rejected this swap on <%= new Date(request.rejectedAt).toLocaleDateString() %>
+                    You rejected this swap on <%= new Date(request.rejectedAt).toLocaleDateString('en-AU') %>
                   </div>
                 </div>
               <% } %>

@@ -160,7 +160,7 @@ router.post('/request/:itemId', upload.single('image'), async (req, res, next) =
                 ownerId: req.session.user.userId
             }, req.file, imageUrl?.trim());
 
-            if (itemResult.errors.length > 0) {
+            if (!itemResult.success) {
                 errors.push(...itemResult.errors);
             } else {
                 offeredItem = itemResult.item;
