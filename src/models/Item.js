@@ -58,6 +58,12 @@ const itemSchema = new mongoose.Schema(
       default: [],
       index: true,
     },
+    status: {
+      type: String,
+      enum: ['available', 'swapped'],
+      default: 'available',
+      index: true,
+    },
   },
   {
     timestamps: true,
@@ -67,6 +73,8 @@ const itemSchema = new mongoose.Schema(
 // Add compound indexes for better query performance (individual field indexes already exist in schema)
 itemSchema.index({ ownerId: 1, itemType: 1 }); // Compound index for owner's items by type
 itemSchema.index({ ownerId: 1, hasImage: 1 }); // Compound index for owner's items with/without images
+itemSchema.index({ status: 1, itemType: 1 }); // Compound index for filtering by status and type
+itemSchema.index({ status: 1, createdAt: -1 }); // Compound index for filtering by status and date
 
 const Item = mongoose.model('Item', itemSchema);
 

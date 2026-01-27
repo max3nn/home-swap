@@ -19,6 +19,7 @@ router.get('/', async (req, res, next) => {
     // Back-compat: `type` was the original query param for the offered category
     const offer = normalizeCategory(req.query.offer || req.query.type || '');
     const want = normalizeCategory(req.query.want || '');
+    const includeSwapped = req.query.includeSwapped === 'true';
 
     if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
       return res.status(503).render('error', {
@@ -31,6 +32,11 @@ router.get('/', async (req, res, next) => {
     const filter = {};
 
     const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // By default, exclude swapped items unless explicitly requested
+    if (!includeSwapped) {
+      filter.status = { $ne: 'swapped' };
+    }
 
     if (q) {
       const regex = new RegExp(escapeRegex(q), 'i');
@@ -56,6 +62,7 @@ router.get('/', async (req, res, next) => {
       q,
       offer,
       want,
+      includeSwapped,
       categories: ITEM_CATEGORIES,
       resultCount: items.length,
     });

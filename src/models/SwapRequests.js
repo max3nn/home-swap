@@ -58,12 +58,12 @@ swapRequestsSchema.index({ status: 1 });
 swapRequestsSchema.index({ createdAt: -1 });
 
 // Instance method to check if request can be acted upon
-swapRequestsSchema.methods.canBeActedUpon = function() {
+swapRequestsSchema.methods.canBeActedUpon = function () {
     return this.status === 'pending';
 };
 
 // Static method to find requests for user's items
-swapRequestsSchema.statics.findForUserItems = async function(userId) {
+swapRequestsSchema.statics.findForUserItems = async function (userId) {
     const Item = require('./Item');
     const userItems = await Item.find({ ownerId: userId }).lean();
     const userItemIds = userItems.map(item => item.itemId);

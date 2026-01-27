@@ -43,6 +43,13 @@
               <span class="helper-text" style="color: hsl(var(--muted-foreground));">What category the owner wants</span>
             </div>
 
+            <div style="margin: 16px 0;">
+              <label>
+                <input type="checkbox" name="includeSwapped" value="true" <%= includeSwapped ? 'checked' : '' %> />
+                <span style="color: hsl(var(--foreground));">Include already swapped items</span>
+              </label>
+            </div>
+
             <div style="display:flex; gap: 10px; margin-top: 14px;">
               <button type="submit" class="btn-primary waves-effect waves-light" style="flex: 1;">
                 Apply
@@ -69,6 +76,9 @@
               <% } %>
               <% if (want) { %>
                 • wants: "<%= want %>"
+              <% } %>
+              <% if (includeSwapped) { %>
+                • including swapped items
               <% } %>
             </div>
           </div>
@@ -101,11 +111,18 @@
                           <%= item.title %>
                         </a>
                       </h5>
-                      <% if (item.itemType) { %>
-                        <span style="font-size: 0.75rem; padding: 6px 10px; border-radius: 999px; background-color: hsl(var(--muted)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); white-space: nowrap;">
-                          <%= item.itemType %>
-                        </span>
-                      <% } %>
+                      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <% if (item.status === 'swapped') { %>
+                          <span style="font-size: 0.75rem; padding: 6px 10px; border-radius: 999px; background-color: hsl(var(--accent)); color: hsl(var(--accent-foreground)); border: 1px solid hsl(var(--border)); white-space: nowrap;">
+                            Swapped
+                          </span>
+                        <% } %>
+                        <% if (item.itemType) { %>
+                          <span style="font-size: 0.75rem; padding: 6px 10px; border-radius: 999px; background-color: hsl(var(--muted)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); white-space: nowrap;">
+                            <%= item.itemType %>
+                          </span>
+                        <% } %>
+                      </div>
                     </div>
 
                     <p style="margin: 10px 0 0; color: hsl(var(--muted-foreground)); font-size: 0.9rem; line-height: 1.5;">
@@ -135,10 +152,14 @@
                           <a href="/items/<%= item.itemId %>/edit" class="btn-primary waves-effect waves-light" style="white-space: nowrap;">
                             Edit
                           </a>
-                        <% } else if (user) { %>
+                        <% } else if (user && item.status !== 'swapped') { %>
                           <a href="/swaps/request/<%= item.itemId %>" class="btn-secondary waves-effect waves-light" style="white-space: nowrap;">
                             Request Swap
                           </a>
+                        <% } else if (user && item.status === 'swapped') { %>
+                          <button class="btn-secondary waves-effect waves-light" disabled style="opacity: 0.5; white-space: nowrap;">
+                            Already Swapped
+                          </button>
                         <% } else { %>
                           <button class="btn-secondary waves-effect waves-light" disabled style="opacity: 0.75;">
                             Request Swap

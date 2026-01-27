@@ -16,6 +16,7 @@ const seedItems = async () => {
           'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Lithium-Ion_Battery_Technology_%284016083577%29.png/640px-Lithium-Ion_Battery_Technology_%284016083577%29.png',
         ownerId: 1,
         itemType: 'tools',
+        status: 'available',
       },
       {
         itemId: 2,
@@ -23,6 +24,7 @@ const seedItems = async () => {
         description:
           'A small collection of pocket lint from various trousers and jackets. Has absolutely no value but might be fun to swap for something equally useless.',
         ownerId: 2,
+        status: 'swapped', // This item was swapped with item 4
       },
       {
         itemId: 3,
@@ -33,6 +35,7 @@ const seedItems = async () => {
           'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Unknown_artist_-_Candlesticks_-_1989.168_-_Cleveland_Museum_of_Art.jpg/640px-Unknown_artist_-_Candlesticks_-_1989.168_-_Cleveland_Museum_of_Art.jpg',
         ownerId: 3,
         itemType: 'home decor',
+        status: 'available',
       },
       {
         itemId: 4,
@@ -43,6 +46,7 @@ const seedItems = async () => {
           'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Kids_bikes_balance.jpg/640px-Kids_bikes_balance.jpg',
         ownerId: 4,
         itemType: 'toys',
+        status: 'swapped', // This item was swapped with item 2
       },
     ];
     await Item.deleteMany({});
