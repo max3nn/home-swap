@@ -1,12 +1,26 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 
 const SwapRequests = require('../models/SwapRequests');
 const Item = require('../models/Item');
 const User = require('../models/User');
+const { createItem } = require('./items');
 
 const router = express.Router();
+
+// Configure multer for image uploads
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: function (req, file, cb) {
+    if (!file || !file.mimetype) return cb(null, true);
+    if (file.mimetype.startsWith('image/')) return cb(null, true);
+    return cb(new Error('Only image uploads are allowed'));
+  },
+});
 
 // Middleware to ensure user is logged in
 router.use((req, res, next) => {
@@ -65,10 +79,10 @@ router.get('/request/:itemId', async (req, res, next) => {
 });
 
 // POST /swaps/request/:itemId - Process swap request
-router.post('/request/:itemId', async (req, res, next) => {
+router.post('/request/:itemId', upload.single('image'), async (req, res, next) => {
   try {
     const { itemId } = req.params;
-    const { offeredItemId, message, createNewItem, title, description, itemType } = req.body;
+    const { offeredItemId, message, createNewItem, title, description, itemType, imageUrl } = req.body;
     const errors = [];
 
     if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
@@ -107,6 +121,14 @@ router.post('/request/:itemId', async (req, res, next) => {
       if (!itemType || itemType.trim().length < 1) {
         errors.push('Item category is required.');
       }
+      // Validate image URL if provided
+      if (imageUrl && imageUrl.trim().length > 0) {
+        try {
+          new URL(imageUrl.trim());
+        } catch {
+          errors.push('Please enter a valid image URL.');
+        }
+      }
     }
 
     // Get the target item
@@ -131,23 +153,19 @@ router.post('/request/:itemId', async (req, res, next) => {
     let offeredItem = null;
     
     if (createNewItem) {
-      // Create a new item
-      const { ITEM_CATEGORIES } = require('../config/itemCategories');
-      if (!ITEM_CATEGORIES.includes(itemType)) {
-        errors.push('Invalid item category selected.');
-      }
-      
-      if (errors.length === 0) {
-        offeredItem = new Item({
-          itemId: uuidv4(),
-          title: title.trim(),
-          description: description.trim(),
-          itemType: itemType.trim(),
-          ownerId: req.session.user.userId,
-          wantedCategories: [],
-          hasImage: false,
-        });
-        await offeredItem.save();
+      // Create a new item using shared function
+      const itemResult = await createItem(req, {
+        title: title?.trim(),
+        description: description?.trim(),
+        category: itemType?.trim(),
+        image_url: imageUrl?.trim(),
+        file: req.file
+      });
+
+      if (itemResult.errors.length > 0) {
+        errors.push(...itemResult.errors);
+      } else {
+        offeredItem = itemResult.item;
       }
     } else {
       // Get the offered item
@@ -169,7 +187,7 @@ router.post('/request/:itemId', async (req, res, next) => {
         userItems,
         categories: ITEM_CATEGORIES,
         errors,
-        formData: { offeredItemId, message, createNewItem, title, description, itemType }
+        formData: { offeredItemId, message, createNewItem, title, description, itemType, imageUrl }
       });
     }
 
@@ -199,7 +217,7 @@ router.post('/request/:itemId', async (req, res, next) => {
       swapRequestId: uuidv4(),
       itemId: targetItem.itemId,
       message: message.trim(),
-      imageUrl: offeredItem.imageUrl || null,
+      imageUrl: offeredItem.imageUrl || (offeredItem.hasImage && offeredItem.image ? `/items/${offeredItem.itemId}/image` : null),
       ownerId: req.session.user.userId,
       offeredItemId: offeredItem.itemId,
       status: 'pending',

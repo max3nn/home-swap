@@ -57,7 +57,7 @@
 
       <!-- Swap Request Form -->
       <div class="col s12 l7">
-        <form method="POST" action="/swaps/request/<%= item.itemId %>">
+        <form method="POST" action="/swaps/request/<%= item.itemId %>" enctype="multipart/form-data">
           <div style="background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
             
             <h5 style="margin: 0 0 20px; font-weight: 700; color: hsl(var(--foreground)); font-size: 1.2rem;">Your Offer</h5>
@@ -125,7 +125,7 @@
               </div>
 
               <!-- Item Category -->
-              <div class="input-field" style="margin-bottom: 32px;">
+              <div class="input-field" style="margin-bottom: 24px;">
                 <i class="material-icons prefix" style="color: hsl(var(--muted-foreground));">category</i>
                 <select id="itemType" name="itemType">
                   <option value="" disabled <%= (!locals.formData || !locals.formData.itemType) ? 'selected' : '' %>>Choose a category</option>
@@ -142,6 +142,50 @@
                 </select>
                 <label for="itemType">Item Category</label>
                 <span class="helper-text" style="color: hsl(var(--muted-foreground));">What category does your item belong to?</span>
+              </div>
+
+              <!-- Item Image Option Toggle -->
+              <div style="margin-bottom: 20px;">
+                <p style="margin: 0 0 12px; color: hsl(var(--foreground)); font-weight: 600;">Add an image (optional)</p>
+                <label>
+                  <input name="imageType" type="radio" value="none" <%= (!locals.formData || (!locals.formData.imageUrl && !locals.formData.imageFile)) ? 'checked' : '' %> onchange="toggleImageType()" />
+                  <span>No image</span>
+                </label>
+                <br style="margin-bottom: 8px;">
+                <label>
+                  <input name="imageType" type="radio" value="url" <%= (locals.formData && locals.formData.imageUrl) ? 'checked' : '' %> onchange="toggleImageType()" />
+                  <span>Link to existing image</span>
+                </label>
+                <br style="margin-bottom: 8px;">
+                <label>
+                  <input name="imageType" type="radio" value="upload" <%= (locals.formData && locals.formData.imageFile) ? 'checked' : '' %> onchange="toggleImageType()" />
+                  <span>Upload new image</span>
+                </label>
+              </div>
+
+              <!-- Image URL Section -->
+              <div id="image-url-section" style="display: <%= (locals.formData && locals.formData.imageUrl) ? 'block' : 'none' %>; margin-bottom: 24px;">
+                <div class="input-field">
+                  <i class="material-icons prefix" style="color: hsl(var(--muted-foreground));">link</i>
+                  <input id="imageUrl" name="imageUrl" type="url" value="<%= (locals.formData && locals.formData.imageUrl) ? locals.formData.imageUrl : '' %>" />
+                  <label for="imageUrl">Image URL</label>
+                  <span class="helper-text" style="color: hsl(var(--muted-foreground));">Enter a web link to your item's image</span>
+                </div>
+              </div>
+
+              <!-- Image Upload Section -->
+              <div id="image-upload-section" style="display: <%= (locals.formData && locals.formData.imageFile) ? 'block' : 'none' %>; margin-bottom: 24px;">
+                <div class="file-field input-field">
+                  <div class="btn" style="background-color: hsl(var(--muted)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border));">
+                    <i class="material-icons left">cloud_upload</i>
+                    <span>Choose Image</span>
+                    <input type="file" name="image" accept="image/*">
+                  </div>
+                  <div class="file-path-wrapper">
+                    <input class="file-path validate" type="text" placeholder="Select an image file">
+                  </div>
+                  <span class="helper-text" style="color: hsl(var(--muted-foreground));">Upload a photo of your item (max 10MB)</span>
+                </div>
               </div>
             </div>
 
@@ -206,7 +250,33 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   toggleOfferType();
+  toggleImageType();
 });
+
+function toggleImageType() {
+  const noneRadio = document.querySelector('input[name="imageType"][value="none"]');
+  const urlRadio = document.querySelector('input[name="imageType"][value="url"]');
+  const uploadRadio = document.querySelector('input[name="imageType"][value="upload"]');
+  const urlSection = document.getElementById('image-url-section');
+  const uploadSection = document.getElementById('image-upload-section');
+  const imageUrlInput = document.getElementById('imageUrl');
+  
+  if (!urlSection || !uploadSection) return; // Exit if elements don't exist
+  
+  if (urlRadio && urlRadio.checked) {
+    urlSection.style.display = 'block';
+    uploadSection.style.display = 'none';
+    if (imageUrlInput) imageUrlInput.setAttribute('required', 'required');
+  } else if (uploadRadio && uploadRadio.checked) {
+    urlSection.style.display = 'none';
+    uploadSection.style.display = 'block';
+    if (imageUrlInput) imageUrlInput.removeAttribute('required');
+  } else {
+    urlSection.style.display = 'none';
+    uploadSection.style.display = 'none';
+    if (imageUrlInput) imageUrlInput.removeAttribute('required');
+  }
+}
 
 function toggleOfferType() {
   const existingRadio = document.querySelector('input[name="offerType"][value="existing"]');
@@ -223,6 +293,8 @@ function toggleOfferType() {
     if (createNewItemInput) createNewItemInput.value = 'true';
     if (offeredItemIdSelect) offeredItemIdSelect.removeAttribute('required');
     if (titleInput) titleInput.setAttribute('required', 'required');
+    // Show image options when creating new item
+    toggleImageType();
   } else {
     if (existingSection) existingSection.style.display = 'block';
     if (createSection) createSection.style.display = 'none';
