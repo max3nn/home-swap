@@ -31,6 +31,10 @@ app.use(session({
 // Middleware to make session data available to all views
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
+  res.locals.success = req.session.success || null;
+  if (req.session.success) {
+    delete req.session.success;
+  }
   next();
 });
 
@@ -59,6 +63,10 @@ app.use('/account', accountRoutes);
 // Item routes (requires login in the router)
 const itemRoutes = require('./routes/items');
 app.use('/items', itemRoutes);
+
+// Swap routes (requires login in the router)
+const swapRoutes = require('./routes/swaps');
+app.use('/swaps', swapRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

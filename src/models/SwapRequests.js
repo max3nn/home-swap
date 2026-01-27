@@ -10,6 +10,10 @@ const swapRequestsSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    offeredItemId: {
+        type: String,
+        required: true,
+    },
     message: {
         type: String,
         required: true,
@@ -22,7 +26,50 @@ const swapRequestsSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    status: {
+        type: String,
+        enum: ['pending', 'accepted', 'rejected', 'cancelled'],
+        default: 'pending',
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    },
+    acceptedAt: {
+        type: Date,
+    },
+    rejectedAt: {
+        type: Date,
+    },
+    cancelledAt: {
+        type: Date,
+    },
 });
+
+// Add indexes for better query performance
+swapRequestsSchema.index({ itemId: 1 });
+swapRequestsSchema.index({ ownerId: 1 });
+swapRequestsSchema.index({ status: 1 });
+swapRequestsSchema.index({ createdAt: -1 });
+
+// Add indexes for better query performance
+swapRequestsSchema.index({ itemId: 1 });
+swapRequestsSchema.index({ ownerId: 1 });
+swapRequestsSchema.index({ status: 1 });
+swapRequestsSchema.index({ createdAt: -1 });
+
+// Instance method to check if request can be acted upon
+swapRequestsSchema.methods.canBeActedUpon = function() {
+    return this.status === 'pending';
+};
+
+// Static method to find requests for user's items
+swapRequestsSchema.statics.findForUserItems = async function(userId) {
+    const Item = require('./Item');
+    const userItems = await Item.find({ ownerId: userId }).lean();
+    const userItemIds = userItems.map(item => item.itemId);
+    return this.find({ itemId: { $in: userItemIds } });
+};
 
 const SwapRequests = mongoose.model('SwapRequests', swapRequestsSchema);
 

@@ -134,6 +134,72 @@ router.use((req, res, next) => {
   next();
 });
 
+// GET /items/:itemId - View individual item with swap requests
+router.get('/:itemId', async (req, res, next) => {
+  try {
+    const { itemId } = req.params;
+
+    if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+      return res.status(503).render('error', {
+        title: 'Service Unavailable',
+        message: 'Database connection unavailable. Please try again later.',
+        error: {},
+      });
+    }
+
+    // Get the item
+    const item = await Item.findOne({ itemId }).lean();
+    if (!item) {
+      return res.status(404).render('error', {
+        title: 'Item Not Found',
+        message: 'The item you are looking for does not exist.',
+        error: {},
+      });
+    }
+
+    // Get swap requests for this item (if user is the owner)
+    let swapRequests = [];
+    if (req.session.user.userId === item.ownerId) {
+      const SwapRequests = require('../models/SwapRequests');
+      const User = require('../models/User');
+      
+      const requests = await SwapRequests.find({ itemId }).lean();
+      
+      // Get offered items and requester info
+      const offeredItemIds = requests.map(r => r.offeredItemId);
+      const requesterIds = [...new Set(requests.map(r => r.ownerId))];
+      
+      const offeredItems = await Item.find({ itemId: { $in: offeredItemIds } }).lean();
+      const requesters = await User.find({ userId: { $in: requesterIds } }, { password: 0 }).lean();
+      
+      const offeredItemsMap = offeredItems.reduce((acc, item) => {
+        acc[item.itemId] = item;
+        return acc;
+      }, {});
+      
+      const requestersMap = requesters.reduce((acc, user) => {
+        acc[user.userId] = user;
+        return acc;
+      }, {});
+      
+      swapRequests = requests.map(request => ({
+        ...request,
+        offeredItem: offeredItemsMap[request.offeredItemId],
+        requester: requestersMap[request.ownerId]
+      }));
+    }
+
+    return res.render('item-detail', {
+      title: item.title,
+      item,
+      swapRequests,
+      isOwner: req.session.user.userId === item.ownerId
+    });
+  } catch (err) {
+    return next(err);
+  }
+});
+
 // GET /items/new - Render posting form
 router.get('/new', (req, res) => {
   return res.render('item-new', {

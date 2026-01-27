@@ -11,10 +11,22 @@ const seedSwapRequests = async () => {
       {
         swapRequestId: new mongoose.Types.ObjectId().toString(),
         itemId: '1',
-        message:
-          'I would like to swap my vintage camera for your Makita batteries.',
+        offeredItemId: '3',
+        message: 'I would like to swap my vintage camera for your Makita batteries.',
         imageUrl: 'https://example.com/images/vintage_camera.jpg',
         ownerId: '3',
+        status: 'pending',
+        createdAt: new Date('2026-01-20'),
+      },
+      {
+        swapRequestId: new mongoose.Types.ObjectId().toString(),
+        itemId: '2',
+        offeredItemId: '4',
+        message: 'Would you be interested in trading your laptop for my guitar?',
+        ownerId: '1',
+        status: 'accepted',
+        createdAt: new Date('2026-01-18'),
+        acceptedAt: new Date('2026-01-19'),
       },
     ];
     await SwapRequest.deleteMany({});
