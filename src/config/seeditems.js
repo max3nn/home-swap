@@ -1,35 +1,4 @@
-import mongoose from 'mongoose';
-
-// Create itemSchema
-const itemSchema = new mongoose.Schema({
-  itemId: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  title: {
-    type: String,
-    required: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  imageUrl: {
-    type: String,
-    required: false,
-  },
-  ownerId: {
-    type: String,
-    required: true,
-  },
-  itemType: {
-    type: String,
-    required: false,
-  },
-});
-
-const Item = mongoose.model('Item', itemSchema);
+const Item = require('../models/Item');
 
 const seedItems = async () => {
   const items = [
@@ -75,4 +44,4 @@ const seedItems = async () => {
   await Item.insertMany(items);
 };
 
-export default seedItems;
+module.exports = seedItems;

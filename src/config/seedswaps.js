@@ -1,31 +1,4 @@
-import mongoose from 'mongoose';
-
-// Create swapSchema
-const swapSchema = new mongoose.Schema({
-  swapId: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  itemId: {
-    type: String,
-    required: true,
-  },
-  message: {
-    type: String,
-    required: true,
-  },
-  imageUrl: {
-    type: String,
-    required: false,
-  },
-  ownerId: {
-    type: String,
-    required: true,
-  },
-});
-
-const Swap = mongoose.model('Swap', swapSchema);
+const Swap = require('../models/Swap');
 
 const seedSwaps = async () => {
   const swaps = [
@@ -42,4 +15,4 @@ const seedSwaps = async () => {
   await Swap.insertMany(swaps);
 };
 
-export default seedSwaps;
+module.exports = seedSwaps;

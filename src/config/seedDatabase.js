@@ -1,8 +1,8 @@
-import mongoose from 'mongoose';
-import seedUsers from './seedusers.js';
-import seedItems from './seeditems.js';
-import seedSwaps from './seedswaps.js';
-import seedLogs from './seedlogs.js';
+const mongoose = require('mongoose');
+const seedUsers = require('./seedusers');
+const seedItems = require('./seeditems');
+const seedSwaps = require('./seedswaps');
+const seedLogs = require('./seedlogs');
 
 async function seedDatabase() {
   try {

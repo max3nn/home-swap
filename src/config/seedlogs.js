@@ -1,28 +1,4 @@
-import mongoose from 'mongoose';
-
-// Create logSchema
-const logSchema = new mongoose.Schema({
-  logId: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  action: {
-    type: String,
-    required: true,
-  },
-  timestamp: {
-    type: Date,
-    required: true,
-    default: Date.now,
-  },
-  userId: {
-    type: String,
-    required: false,
-  },
-});
-
-const Log = mongoose.model('Log', logSchema);
+const Log = require('../models/Log');
 
 const seedLogs = async () => {
   const logs = [
@@ -49,4 +25,4 @@ const seedLogs = async () => {
   await Log.insertMany(logs);
 };
 
-export default seedLogs;
+module.exports = seedLogs;
