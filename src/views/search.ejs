@@ -145,7 +145,7 @@
 
                     <div style="margin-top: 14px;">
                       <div style="color: hsl(var(--muted-foreground)); font-size: 0.8rem; margin-bottom: 10px;">
-                        Owner: <%= item.ownerId %>
+                        Posted by <%= item.ownerName %>
                       </div>
                       <div style="display:flex; gap: 8px; align-items:center; flex-wrap: wrap;">
                         <% if (user && user.userId === item.ownerId) { %>
