@@ -46,11 +46,10 @@ const swapRequestsSchema = new mongoose.Schema({
     },
 });
 
-// Add indexes for better query performance
-swapRequestsSchema.index({ itemId: 1 });
-swapRequestsSchema.index({ ownerId: 1 });
-swapRequestsSchema.index({ status: 1 });
-swapRequestsSchema.index({ createdAt: -1 });
+// Add compound indexes for better query performance
+swapRequestsSchema.index({ itemId: 1, status: 1 }); // For filtering requests by item and status
+swapRequestsSchema.index({ ownerId: 1, status: 1 }); // For filtering user's requests by status
+swapRequestsSchema.index({ itemId: 1, createdAt: -1 }); // For chronological requests on items
 
 // Add indexes for better query performance
 swapRequestsSchema.index({ itemId: 1 });

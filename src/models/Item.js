@@ -64,6 +64,10 @@ const itemSchema = new mongoose.Schema(
   }
 );
 
+// Add compound indexes for better query performance (individual field indexes already exist in schema)
+itemSchema.index({ ownerId: 1, itemType: 1 }); // Compound index for owner's items by type
+itemSchema.index({ ownerId: 1, hasImage: 1 }); // Compound index for owner's items with/without images
+
 const Item = mongoose.model('Item', itemSchema);
 
 module.exports = Item;
