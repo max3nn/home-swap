@@ -112,8 +112,13 @@
                         </a>
                       </h5>
                       <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <% if (item.status === 'swapped') { %>
+                        <% if (item.hasPendingSwaps && item.status !== 'swapped') { %>
                           <span style="font-size: 0.75rem; padding: 6px 10px; border-radius: 999px; background-color: hsl(var(--accent)); color: hsl(var(--accent-foreground)); border: 1px solid hsl(var(--border)); white-space: nowrap;">
+                            Pending Swap
+                          </span>
+                        <% } %>
+                        <% if (item.status === 'swapped') { %>
+                          <span style="font-size: 0.75rem; padding: 6px 10px; border-radius: 999px; background-color: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); border: 1px solid hsl(var(--border)); white-space: nowrap;">
                             Swapped
                           </span>
                         <% } %>
