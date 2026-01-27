@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
 
 const Item = require('../models/Item');
 const { ITEM_CATEGORIES, isValidCategory, normalizeCategory } = require('../config/itemCategories');
@@ -19,6 +20,79 @@ const upload = multer({
     return cb(new Error('Only image uploads are allowed'));
   },
 });
+
+// Reusable function to create an item
+const createItem = async (itemData, imageFile = null, imageUrl = null) => {
+  const errors = [];
+
+  // Validate required fields
+  if (!itemData.title || itemData.title.trim().length < 1) {
+    errors.push('Item title is required.');
+  }
+  if (itemData.title && itemData.title.length > 100) {
+    errors.push('Item title must be less than 100 characters.');
+  }
+  if (!itemData.description || itemData.description.trim().length < 1) {
+    errors.push('Item description is required.');
+  }
+  if (itemData.description && itemData.description.length > 1000) {
+    errors.push('Item description must be less than 1000 characters.');
+  }
+  if (!itemData.itemType || itemData.itemType.trim().length < 1) {
+    errors.push('Item category is required.');
+  }
+
+  // Validate category
+  if (itemData.itemType && !ITEM_CATEGORIES.includes(itemData.itemType)) {
+    errors.push('Invalid item category selected.');
+  }
+
+  // Validate image URL if provided
+  if (imageUrl && imageUrl.trim().length > 0) {
+    try {
+      new URL(imageUrl.trim());
+    } catch {
+      errors.push('Please enter a valid image URL.');
+    }
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  // Prepare item data
+  const itemId = uuidv4();
+  const newItemData = {
+    itemId,
+    title: itemData.title.trim(),
+    description: itemData.description.trim(),
+    itemType: itemData.itemType.trim(),
+    ownerId: itemData.ownerId,
+    wantedCategories: itemData.wantedCategories || [],
+    hasImage: false,
+  };
+
+  // Handle image
+  if (imageFile) {
+    newItemData.image = {
+      data: imageFile.buffer,
+      contentType: imageFile.mimetype
+    };
+    newItemData.hasImage = true;
+    newItemData.imageUrl = `/items/${itemId}/image`;
+  } else if (imageUrl && imageUrl.trim().length > 0) {
+    newItemData.imageUrl = imageUrl.trim();
+    newItemData.hasImage = true;
+  }
+
+  try {
+    const item = new Item(newItemData);
+    await item.save();
+    return { success: true, item };
+  } catch (err) {
+    return { success: false, errors: ['Failed to create item: ' + err.message] };
+  }
+};
 
 const toBuffer = (value) => {
   if (!value) return null;
@@ -161,11 +235,7 @@ router.post('/new', upload.single('image'), async (req, res, next) => {
     }
 
     const user = req.session.user;
-    const errors = [];
-
-    const title = (req.body.title || '').trim();
-    const description = (req.body.description || '').trim();
-    const itemTypeRaw = (req.body.itemType || '').trim();
+    const { title, description, itemType, imageUrl } = req.body;
 
     let wanted = req.body.wantedCategories || [];
     if (typeof wanted === 'string') wanted = [wanted];
@@ -173,42 +243,93 @@ router.post('/new', upload.single('image'), async (req, res, next) => {
       .map((c) => normalizeCategory(c))
       .filter((c) => c && isValidCategory(c));
 
-    const itemType = isValidCategory(itemTypeRaw) ? normalizeCategory(itemTypeRaw) : '';
+    const itemData = {
+      title,
+      description,
+      itemType,
+      ownerId: user.userId,
+      wantedCategories
+    };
 
-    if (!title) errors.push('Title is required');
-    if (!description) errors.push('Description is required');
+    const result = await createItem(itemData, req.file, imageUrl);
 
-    const image = req.file && req.file.buffer
-      ? { data: req.file.buffer, contentType: req.file.mimetype || 'application/octet-stream' }
-      : undefined;
-
-    if (errors.length > 0) {
+    if (!result.success) {
       return res.status(400).render('item-new', {
         title: 'Post Item',
         categories: ITEM_CATEGORIES,
-        errors,
-        values: { title, description, itemType: itemTypeRaw, wantedCategories: wanted || [] },
+        errors: result.errors,
+        values: { title, description, itemType, wantedCategories: wanted || [] },
       });
     }
 
-    const itemId = new mongoose.Types.ObjectId().toString();
-
-    const imageUrl = image ? `/items/${itemId}/image` : '';
-
-    await Item.create({
-      itemId,
-      title,
-      description,
-      imageUrl,
-      image,
-      hasImage: Boolean(image),
-      ownerId: user.userId,
-      itemType: itemType || undefined,
-      wantedCategories,
-    });
-
-    console.log(`[ITEM_CREATE] User ${user.userId} created item ${itemId}`);
+    console.log(`[ITEM_CREATE] User ${user.userId} created item ${result.item.itemId}`);
     return res.redirect('/search');
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// GET /items/:itemId - View individual item with swap requests
+router.get('/:itemId', async (req, res, next) => {
+  try {
+    const { itemId } = req.params;
+
+    if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+      return res.status(503).render('error', {
+        title: 'Service Unavailable',
+        message: 'Database connection unavailable. Please try again later.',
+        error: {},
+      });
+    }
+
+    // Get the item
+    const item = await Item.findOne({ itemId }).lean();
+    if (!item) {
+      return res.status(404).render('error', {
+        title: 'Item Not Found',
+        message: 'The item you are looking for does not exist.',
+        error: {},
+      });
+    }
+
+    // Get swap requests for this item (if user is the owner)
+    let swapRequests = [];
+    if (req.session.user.userId === item.ownerId) {
+      const SwapRequests = require('../models/SwapRequests');
+      const User = require('../models/User');
+
+      const requests = await SwapRequests.find({ itemId }).lean();
+
+      // Get offered items and requester info
+      const offeredItemIds = requests.map(r => r.offeredItemId);
+      const requesterIds = [...new Set(requests.map(r => r.ownerId))];
+
+      const offeredItems = await Item.find({ itemId: { $in: offeredItemIds } }).lean();
+      const requesters = await User.find({ userId: { $in: requesterIds } }, { password: 0 }).lean();
+
+      const offeredItemsMap = offeredItems.reduce((acc, item) => {
+        acc[item.itemId] = item;
+        return acc;
+      }, {});
+
+      const requestersMap = requesters.reduce((acc, user) => {
+        acc[user.userId] = user;
+        return acc;
+      }, {});
+
+      swapRequests = requests.map(request => ({
+        ...request,
+        offeredItem: offeredItemsMap[request.offeredItemId],
+        requester: requestersMap[request.ownerId]
+      }));
+    }
+
+    return res.render('item-detail', {
+      title: item.title,
+      item,
+      swapRequests,
+      isOwner: req.session.user.userId === item.ownerId
+    });
   } catch (err) {
     return next(err);
   }
@@ -347,21 +468,21 @@ router.post('/:itemId/edit', upload.single('image'), async (req, res, next) => {
     item.description = description;
     item.itemType = itemType || undefined;
     item.wantedCategories = wantedCategories;
-    
+
     // Update image if a new one was uploaded
     if (req.file && req.file.buffer) {
       // Ensure image object exists
       if (!item.image) {
         item.image = {};
       }
-      
+
       // Set nested fields directly
       item.image.data = req.file.buffer;
       item.image.contentType = req.file.mimetype || 'application/octet-stream';
       item.hasImage = true;
       // Add timestamp to imageUrl to force browser cache refresh
       item.imageUrl = `/items/${itemId}/image?v=${Date.now()}`;
-      
+
       // Mark the entire image object as modified
       item.markModified('image');
     }
@@ -383,7 +504,7 @@ router.use(async (err, req, res, next) => {
     const isEditRoute = req.path.includes('/edit');
     const viewName = isEditRoute ? 'item-edit' : 'item-new';
     const title = isEditRoute ? 'Edit Item' : 'Post Item';
-    
+
     let item = null;
     if (isEditRoute && req.params.itemId) {
       try {
@@ -396,7 +517,7 @@ router.use(async (err, req, res, next) => {
     const renderData = {
       title,
       categories: ITEM_CATEGORIES,
-      errors: err.code === 'LIMIT_FILE_SIZE' 
+      errors: err.code === 'LIMIT_FILE_SIZE'
         ? ['Image file is too large (max 10MB). Please choose a smaller image.']
         : ['Upload failed. Please try again.'],
       values: {
@@ -415,4 +536,7 @@ router.use(async (err, req, res, next) => {
   return next(err);
 });
 
-module.exports = router;
+module.exports = {
+  router,
+  createItem
+};

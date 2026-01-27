@@ -1,0 +1,203 @@
+<!-- Item Detail Section -->
+<section style="padding: 56px 0; min-height: calc(100vh - 64px - 200px); background-color: hsl(var(--background));">
+  <div class="container">
+    <div class="row" style="margin-bottom: 18px;">
+      <div class="col s12">
+        <nav style="background: none; box-shadow: none; line-height: normal; height: auto; padding: 0; margin-bottom: 16px;">
+          <div class="nav-wrapper" style="background: none;">
+            <div class="col s12" style="padding: 0;">
+              <a href="/search" style="color: hsl(var(--muted-foreground)); text-decoration: none; font-size: 0.9rem;">
+                <i class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">arrow_back</i>
+                Back to Search
+              </a>
+            </div>
+          </div>
+        </nav>
+        <h2 style="font-size: 2rem; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 6px;"><%= item.title %></h2>
+        <p style="color: hsl(var(--muted-foreground)); margin: 0;">Item details and swap requests.</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Item Details -->
+      <div class="col s12 l<%= isOwner && swapRequests.length > 0 ? '7' : '12' %>">
+        <div style="background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); margin-bottom: 20px;">
+          
+          <!-- Image -->
+          <div style="height: 300px; background-color: hsl(var(--muted)); display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius: var(--radius); margin-bottom: 20px;">
+            <% if (item.imageUrl) { %>
+              <img src="<%= item.imageUrl %>" alt="<%= item.title %>" style="width: 100%; height: 100%; object-fit: cover;" />
+            <% } else { %>
+              <i class="material-icons" style="font-size: 96px; color: hsl(var(--muted-foreground)); opacity: 0.6;">image</i>
+            <% } %>
+          </div>
+
+          <!-- Title and Category -->
+          <div style="display:flex; align-items:flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 1.8rem; font-weight: 700; color: hsl(var(--foreground)); line-height: 1.25;">
+              <%= item.title %>
+            </h3>
+            <% if (item.itemType) { %>
+              <span style="font-size: 0.8rem; padding: 8px 12px; border-radius: 999px; background-color: hsl(var(--muted)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); white-space: nowrap;">
+                <%= item.itemType %>
+              </span>
+            <% } %>
+          </div>
+
+          <!-- Description -->
+          <div style="margin-bottom: 20px;">
+            <h5 style="margin: 0 0 8px; font-weight: 600; color: hsl(var(--foreground)); font-size: 1rem;">Description</h5>
+            <p style="margin: 0; color: hsl(var(--foreground)); font-size: 0.95rem; line-height: 1.6;">
+              <%= item.description %>
+            </p>
+          </div>
+
+          <!-- Wanted Categories -->
+          <% if (item.wantedCategories && item.wantedCategories.length > 0) { %>
+            <div style="margin-bottom: 20px;">
+              <h5 style="margin: 0 0 8px; font-weight: 600; color: hsl(var(--foreground)); font-size: 1rem;">Looking For</h5>
+              <div style="display:flex; flex-wrap: wrap; gap: 8px;">
+                <% item.wantedCategories.forEach(function(w) { %>
+                  <span style="font-size: 0.8rem; padding: 8px 12px; border-radius: 999px; background-color: hsl(var(--accent)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border));">
+                    <%= w %>
+                  </span>
+                <% }); %>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- Owner Info -->
+          <div style="padding: 16px; background-color: hsl(var(--muted)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); margin-bottom: 20px;">
+            <h5 style="margin: 0 0 8px; font-weight: 600; color: hsl(var(--foreground)); font-size: 1rem;">Owner</h5>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i class="material-icons" style="color: hsl(var(--muted-foreground)); font-size: 20px;">account_circle</i>
+              <span style="color: hsl(var(--foreground)); font-size: 0.9rem;"><%= item.ownerId %></span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div style="display:flex; gap: 12px; align-items:center; flex-wrap: wrap;">
+            <% if (isOwner) { %>
+              <a href="/items/<%= item.itemId %>/edit" class="btn waves-effect waves-light" style="background-color: hsl(var(--primary)); border-radius: 999px; box-shadow: none;">
+                <i class="material-icons left">edit</i>
+                Edit Item
+              </a>
+            <% } else { %>
+              <a href="/swaps/request/<%= item.itemId %>" class="btn waves-effect waves-light" style="background-color: hsl(var(--primary)); border-radius: 999px; box-shadow: none;">
+                <i class="material-icons left">swap_horiz</i>
+                Request Swap
+              </a>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Swap Requests (Only for Owner) -->
+      <% if (isOwner && swapRequests.length > 0) { %>
+        <div class="col s12 l5">
+          <div style="background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+            
+            <h5 style="margin: 0 0 16px; font-weight: 700; color: hsl(var(--foreground)); font-size: 1.2rem;">
+              Swap Requests (<%= swapRequests.length %>)
+            </h5>
+
+            <div style="max-height: 600px; overflow-y: auto;">
+              <% swapRequests.forEach(function(request, index) { %>
+                <div style="<%= index > 0 ? 'margin-top: 16px; padding-top: 16px; border-top: 1px solid hsl(var(--border));' : '' %>">
+                  
+                  <!-- Status and Date -->
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span style="font-size: 0.7rem; padding: 4px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+                      <% if (request.status === 'pending') { %>
+                        background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7;
+                      <% } else if (request.status === 'accepted') { %>
+                        background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;
+                      <% } else if (request.status === 'rejected') { %>
+                        background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;
+                      <% } %>
+                    ">
+                      <%= request.status %>
+                    </span>
+                    <div style="color: hsl(var(--muted-foreground)); font-size: 0.7rem;">
+                      <%= new Date(request.createdAt).toLocaleDateString() %>
+                    </div>
+                  </div>
+
+                  <!-- Requester -->
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <i class="material-icons" style="color: hsl(var(--muted-foreground)); font-size: 16px;">person</i>
+                    <span style="font-weight: 600; color: hsl(var(--foreground)); font-size: 0.9rem;">
+                      <%= request.requester ? request.requester.username : 'Unknown User' %>
+                    </span>
+                  </div>
+
+                  <!-- Offered Item -->
+                  <% if (request.offeredItem) { %>
+                    <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+                      <div style="width: 60px; height: 60px; background-color: hsl(var(--muted)); display: flex; align-items: center; justify-content: center; border-radius: var(--radius); overflow: hidden; flex-shrink: 0;">
+                        <% if (request.offeredItem.imageUrl) { %>
+                          <img src="<%= request.offeredItem.imageUrl %>" alt="<%= request.offeredItem.title %>" style="width: 100%; height: 100%; object-fit: cover;" />
+                        <% } else { %>
+                          <i class="material-icons" style="font-size: 24px; color: hsl(var(--muted-foreground)); opacity: 0.6;">image</i>
+                        <% } %>
+                      </div>
+                      <div style="flex: 1;">
+                        <h6 style="margin: 0 0 2px; font-weight: 600; color: hsl(var(--foreground)); font-size: 0.9rem;"><%= request.offeredItem.title %></h6>
+                        <% if (request.offeredItem.itemType) { %>
+                          <span style="font-size: 0.65rem; padding: 3px 6px; border-radius: 999px; background-color: hsl(var(--muted)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border));">
+                            <%= request.offeredItem.itemType %>
+                          </span>
+                        <% } %>
+                      </div>
+                    </div>
+                  <% } %>
+
+                  <!-- Message -->
+                  <% if (request.message) { %>
+                    <div style="background-color: hsl(var(--muted)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 12px; margin-bottom: 10px;">
+                      <p style="margin: 0; color: hsl(var(--foreground)); font-size: 0.8rem; line-height: 1.4;"><%= request.message %></p>
+                    </div>
+                  <% } %>
+
+                  <!-- Actions -->
+                  <% if (request.status === 'pending') { %>
+                    <div style="display: flex; gap: 8px;">
+                      <form method="POST" action="/swaps/<%= request.swapRequestId %>/accept" style="display: inline;">
+                        <button type="submit" class="btn waves-effect waves-light" style="background-color: #28a745; padding: 0 12px; height: 32px; line-height: 32px; font-size: 0.8rem; border-radius: 999px; box-shadow: none;" onclick="return confirm('Accept this swap?')">
+                          <i class="material-icons left" style="font-size: 14px;">check</i>
+                          Accept
+                        </button>
+                      </form>
+                      <form method="POST" action="/swaps/<%= request.swapRequestId %>/reject" style="display: inline;">
+                        <button type="submit" class="btn waves-effect waves-light" style="background-color: #dc3545; padding: 0 12px; height: 32px; line-height: 32px; font-size: 0.8rem; border-radius: 999px; box-shadow: none;" onclick="return confirm('Reject this swap?')">
+                          <i class="material-icons left" style="font-size: 14px;">close</i>
+                          Reject
+                        </button>
+                      </form>
+                    </div>
+                  <% } %>
+
+                </div>
+              <% }); %>
+            </div>
+
+            <div style="margin-top: 16px; text-align: center;">
+              <a href="/swaps/received" class="btn-secondary waves-effect waves-light" style="font-size: 0.9rem; padding: 0 16px; height: 36px; line-height: 34px;">
+                View All Requests
+              </a>
+            </div>
+          </div>
+        </div>
+      <% } else if (isOwner) { %>
+        <div class="col s12 l5">
+          <div style="background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); text-align: center;">
+            <i class="material-icons" style="font-size: 48px; color: hsl(var(--muted-foreground)); margin-bottom: 12px;">inbox</i>
+            <h5 style="margin: 0 0 8px; font-weight: 600; color: hsl(var(--foreground));">No Swap Requests Yet</h5>
+            <p style="margin: 0; color: hsl(var(--muted-foreground));">When people make swap requests for this item, they'll appear here.</p>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+  </div>
+</section>

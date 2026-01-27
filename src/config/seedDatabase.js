@@ -1,8 +1,8 @@
-import mongoose from 'mongoose';
-import seedUsers from './seedusers.js';
-import seedItems from './seeditems.js';
-import seedSwaps from './seedswaps.js';
-import seedLogs from './seedlogs.js';
+const mongoose = require('mongoose');
+const seedUsers = require('./seedUsers');
+const seedItems = require('./seedItems');
+const seedSwapRequests = require('./seedSwapRequests');
+const seedLogs = require('./seedLogs');
 
 async function seedDatabase() {
   try {
@@ -12,31 +12,16 @@ async function seedDatabase() {
     console.log('Seeding items...');
     await seedItems();
 
-    console.log('Seeding swaps...');
-    await seedSwaps();
+    console.log('Seeding swap requests...');
+    await seedSwapRequests();
 
     console.log('Seeding logs...');
     await seedLogs();
 
     console.log('Database seeding completed successfully!');
-    mongoose.connection.close();
-    process.exit(0);
   } catch (error) {
     console.error('Error seeding database:', error);
-    process.exit(1);
   }
 }
 
-mongoose
-  .connect('mongodb://localhost:27017/homeswapDB', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(async () => {
-    console.log('Database connected');
-    await seedDatabase();
-  })
-  .catch(err => {
-    console.error('Database connection error:', err);
-    process.exit(1);
-  });
+module.exports = seedDatabase;

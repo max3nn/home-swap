@@ -14,7 +14,7 @@
     "docker:test": "docker-compose --profile test up -d",
     "docker:logs": "docker-compose logs mongodb",
     "docker:logs:express": "docker-compose logs mongo-express",
-    "seed:db": "node src/seedDatabase.js"
+    "seed:db": "node src/config/seedDatabase.js"
   },
   "keywords": [
     "swap",
@@ -32,7 +32,8 @@
     "express-session": "^1.18.2",
     "materialize-css": "^1.0.0",
     "mongoose": "^9.1.4",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "fast-check": "^4.5.3",

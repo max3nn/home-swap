@@ -22,5 +22,6 @@ db.createCollection('items');
 db.createCollection('swaprequests');
 db.createCollection('messages');
 db.createCollection('reports');
+db.createCollection('logs');
 
 print('Database initialization completed for homeswap database');

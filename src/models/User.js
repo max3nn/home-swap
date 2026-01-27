@@ -34,6 +34,11 @@ const userSchema = new mongoose.Schema({
   timestamps: true,
 });
 
+// Add indexes for better query performance (userId, username, email already have unique indexes)
+userSchema.index({ userrole: 1 });
+userSchema.index({ createdAt: -1 });
+userSchema.index({ userrole: 1, createdAt: -1 }); // Compound index for admin queries
+
 // Hash password before saving
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
