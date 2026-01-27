@@ -135,9 +135,12 @@
                         <%= category %>
                       </option>
                     <% }); %>
+                  <% } else { %>
+                    <!-- Debug: Show if categories are missing -->
+                    <option value="" disabled>No categories available</option>
                   <% } %>
                 </select>
-                <label>Item Category</label>
+                <label for="itemType">Item Category</label>
                 <span class="helper-text" style="color: hsl(var(--muted-foreground));">What category does your item belong to?</span>
               </div>
             </div>
@@ -179,6 +182,32 @@
 </section>
 
 <script>
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize Materialize components
+  try {
+    var selects = document.querySelectorAll('select');
+    if (selects.length > 0) {
+      M.FormSelect.init(selects);
+      console.log('Initialized', selects.length, 'select elements');
+    }
+    
+    var textareas = document.querySelectorAll('textarea[data-length]');
+    if (textareas.length > 0) {
+      M.CharacterCounter.init(textareas);
+    }
+    
+    var allTextareas = document.querySelectorAll('textarea');
+    if (allTextareas.length > 0) {
+      M.textareaAutoResize(allTextareas);
+    }
+  } catch (error) {
+    console.error('Error initializing Materialize components:', error);
+  }
+  
+  toggleOfferType();
+});
+
 function toggleOfferType() {
   const existingRadio = document.querySelector('input[name="offerType"][value="existing"]');
   const createRadio = document.querySelector('input[name="offerType"][value="create"]');
@@ -188,23 +217,29 @@ function toggleOfferType() {
   const offeredItemIdSelect = document.getElementById('offeredItemId');
   const titleInput = document.getElementById('title');
   
-  if (createRadio.checked) {
-    existingSection.style.display = 'none';
-    createSection.style.display = 'block';
-    createNewItemInput.value = 'true';
-    offeredItemIdSelect.removeAttribute('required');
-    titleInput.setAttribute('required', 'required');
+  if (createRadio && createRadio.checked) {
+    if (existingSection) existingSection.style.display = 'none';
+    if (createSection) createSection.style.display = 'block';
+    if (createNewItemInput) createNewItemInput.value = 'true';
+    if (offeredItemIdSelect) offeredItemIdSelect.removeAttribute('required');
+    if (titleInput) titleInput.setAttribute('required', 'required');
   } else {
-    existingSection.style.display = 'block';
-    createSection.style.display = 'none';
-    createNewItemInput.value = '';
-    offeredItemIdSelect.setAttribute('required', 'required');
-    titleInput.removeAttribute('required');
+    if (existingSection) existingSection.style.display = 'block';
+    if (createSection) createSection.style.display = 'none';
+    if (createNewItemInput) createNewItemInput.value = '';
+    if (offeredItemIdSelect) offeredItemIdSelect.setAttribute('required', 'required');
+    if (titleInput) titleInput.removeAttribute('required');
   }
+  
+  // Reinitialize select elements after visibility change
+  setTimeout(function() {
+    try {
+      var visibleSelects = document.querySelectorAll('select');
+      M.FormSelect.init(visibleSelects);
+      console.log('Reinitialized select elements');
+    } catch (error) {
+      console.error('Error reinitializing select elements:', error);
+    }
+  }, 100);
 }
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-  toggleOfferType();
-});
 </script>
