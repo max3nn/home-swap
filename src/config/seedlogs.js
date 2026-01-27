@@ -1,4 +1,5 @@
 const Log = require('../models/Log');
+const mongoose = require('mongoose');
 
 const seedLogs = async () => {
   const logs = [

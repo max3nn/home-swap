@@ -14,7 +14,7 @@
     "docker:test": "docker-compose --profile test up -d",
     "docker:logs": "docker-compose logs mongodb",
     "docker:logs:express": "docker-compose logs mongo-express",
-    "seed:db": "node src/seedDatabase.js"
+    "seed:db": "node src/config/seedDatabase.js"
   },
   "keywords": [
     "swap",

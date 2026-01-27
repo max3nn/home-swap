@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
-const swapSchema = new mongoose.Schema({
-    swapId: {
+const swapRequestsSchema = new mongoose.Schema({
+    swapRequestId: {
         type: String,
         required: true,
         unique: true,
@@ -24,6 +24,6 @@ const swapSchema = new mongoose.Schema({
     },
 });
 
-const Swap = mongoose.model('Swap', swapSchema);
+const SwapRequests = mongoose.model('SwapRequests', swapRequestsSchema);
 
-module.exports = Swap;
+module.exports = SwapRequests;
