@@ -19,11 +19,8 @@ async function seedDatabase() {
     await seedLogs();
 
     console.log('Database seeding completed successfully!');
-    mongoose.connection.close();
-    process.exit(0);
   } catch (error) {
     console.error('Error seeding database:', error);
-    process.exit(1);
   }
 }
 

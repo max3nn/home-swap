@@ -63,7 +63,7 @@ app.use('/items', itemRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).render('error', { 
+  res.status(500).render('error', {
     title: 'Error',
     message: 'Something went wrong!',
     error: process.env.NODE_ENV === 'development' ? err : {}
