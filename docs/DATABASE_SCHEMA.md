@@ -21,6 +21,7 @@ erDiagram
         String imageUrl "Optional"
         String ownerId FK "Required"
         String itemType "Optional"
+        String status "available/swapped, Default: available"
     }
 
     SwapRequest {
@@ -83,6 +84,14 @@ The **Items** collection stores information about items available for swapping.
 - `imageUrl`: URL to item image (String, Optional)
 - `ownerId`: Reference to the user who owns the item (String, Foreign Key)
 - `itemType`: Category/type of item (String, Optional)
+- `status`: Current availability status - 'available' (default) or 'swapped' (String, Required)
+
+**Status Field Behavior:**
+
+- Items start as 'available' when created
+- When a swap request is accepted, both items are automatically marked as 'swapped'
+- Swapped items are excluded from search results by default
+- Users can optionally include swapped items in search results
 
 ### SwapRequests Collection
 
@@ -165,10 +174,13 @@ For optimal query performance, the following indexes have been implemented:
   - `ownerId` - Fetch user's items
   - `itemType` - Category-based filtering
   - `hasImage` - Filter items with/without images
+  - `status` - Filter by availability status
   
 - **Compound Indexes**:
   - `ownerId + itemType` - Owner's items by category
   - `ownerId + hasImage` - Owner's items with/without images
+  - `status + itemType` - Available items by category
+  - `status + createdAt` - Available items chronologically
 
 ### SwapRequests Collection Indexes
 
@@ -208,7 +220,10 @@ These indexes provide significant performance improvements for:
 ## Sample Data Flow
 
 1. **User Registration**: New user document created in Users collection
-2. **Item Listing**: User creates item document in Items collection with ownerId reference
+2. **Item Listing**: User creates item document in Items collection with ownerId reference and status 'available'
 3. **Swap Request**: Another user creates swap request document in SwapRequests collection referencing both target itemId and their own offered itemId
 4. **Request Processing**: Item owner can accept/reject the swap request, updating the status field
-5. **Activity Logging**: All actions are logged in Logs collection with appropriate userId references
+   - **If Accepted**: Both items' status is updated to 'swapped', making them unavailable for new requests
+   - **If Rejected**: Items remain 'available' for other swap opportunities
+5. **Search Filtering**: Search results exclude 'swapped' items by default, with option to include them
+6. **Activity Logging**: All actions are logged in Logs collection with appropriate userId references
