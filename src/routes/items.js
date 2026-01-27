@@ -292,11 +292,18 @@ router.get('/:itemId', async (req, res, next) => {
       });
     }
 
+    // Get the owner information
+    const User = require('../models/User');
+    const owner = await User.findOne({ userId: item.ownerId }, { username: 1, userId: 1 }).lean();
+    const itemWithOwner = {
+      ...item,
+      ownerName: owner ? owner.username : 'Unknown User'
+    };
+
     // Get swap requests for this item (if user is the owner)
     let swapRequests = [];
-    if (req.session.user.userId === item.ownerId) {
+    if (req.session.user.userId === itemWithOwner.ownerId) {
       const SwapRequests = require('../models/SwapRequests');
-      const User = require('../models/User');
 
       const requests = await SwapRequests.find({ itemId }).lean();
 
@@ -325,10 +332,10 @@ router.get('/:itemId', async (req, res, next) => {
     }
 
     return res.render('item-detail', {
-      title: item.title,
-      item,
+      title: itemWithOwner.title,
+      item: itemWithOwner,
       swapRequests,
-      isOwner: req.session.user.userId === item.ownerId
+      isOwner: req.session.user.userId === itemWithOwner.ownerId
     });
   } catch (err) {
     return next(err);
