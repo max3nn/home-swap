@@ -303,9 +303,9 @@ router.get('/:itemId', async (req, res, next) => {
     // Get swap requests for this item (if user is the owner)
     let swapRequests = [];
     if (req.session.user.userId === itemWithOwner.ownerId) {
-      const SwapRequests = require('../models/SwapRequests');
+      const SwapRequest = require('../models/SwapRequest');
 
-      const requests = await SwapRequests.find({ itemId }).lean();
+      const requests = await SwapRequest.find({ itemId }).lean();
 
       // Get offered items and requester info
       const offeredItemIds = requests.map(r => r.offeredItemId);
