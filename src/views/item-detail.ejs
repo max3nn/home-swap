@@ -14,7 +14,21 @@
           </div>
         </nav>
         <h2 style="font-size: 2rem; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 6px;"><%= item.title %></h2>
-        <p style="color: hsl(var(--muted-foreground)); margin: 0;">Item details and swap requests.</p>
+        <p style="color: hsl(var(--muted-foreground)); margin: 0 0 8px;">Item details and swap requests.</p>
+        <% if (hasPendingSwaps && item.status !== 'swapped') { %>
+          <div style="margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; padding: 8px 12px; border-radius: 999px; background-color: #f59e0b; color: white; border: 1px solid #d97706; white-space: nowrap; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              Pending Swap
+            </span>
+          </div>
+        <% } %>
+        <% if (item.status === 'swapped') { %>
+          <div style="margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; padding: 8px 12px; border-radius: 999px; background-color: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); border: 1px solid hsl(var(--border)); white-space: nowrap; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              Swapped
+            </span>
+          </div>
+        <% } %>
       </div>
     </div>
 
@@ -38,16 +52,6 @@
               <%= item.title %>
             </h3>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <% if (hasPendingSwaps) { %>
-                <span style="font-size: 0.75rem; padding: 6px 10px; border-radius: 999px; background-color: hsl(var(--accent)); color: hsl(var(--accent-foreground)); border: 1px solid hsl(var(--border)); white-space: nowrap;">
-                  Pending Swap
-                </span>
-              <% } %>
-              <% if (item.status === 'swapped') { %>
-                <span style="font-size: 0.75rem; padding: 6px 10px; border-radius: 999px; background-color: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); border: 1px solid hsl(var(--border)); white-space: nowrap;">
-                  Swapped
-                </span>
-              <% } %>
               <% if (item.itemType) { %>
                 <span style="font-size: 0.8rem; padding: 8px 12px; border-radius: 999px; background-color: hsl(var(--muted)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); white-space: nowrap;">
                   <%= item.itemType %>
