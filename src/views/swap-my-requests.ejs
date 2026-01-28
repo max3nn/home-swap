@@ -1,0 +1,152 @@
+<!-- My Swap Requests Section -->
+<section style="padding: 56px 0; min-height: calc(100vh - 64px - 200px); background-color: hsl(var(--background));">
+  <div class="container">
+    <div class="row" style="margin-bottom: 18px;">
+      <div class="col s12">
+        <h2 style="font-size: 2rem; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 6px;">My Swap Requests</h2>
+        <p style="color: hsl(var(--muted-foreground)); margin: 0;">Swap requests you have made to other users.</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col s12">
+        <% if (!swapRequests || swapRequests.length === 0) { %>
+          <div style="background-color: hsl(var(--muted)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 24px; text-align: center;">
+            <i class="material-icons" style="font-size: 48px; color: hsl(var(--muted-foreground)); margin-bottom: 12px;">swap_horiz</i>
+            <h5 style="margin: 0 0 8px; font-weight: 600; color: hsl(var(--foreground));">No Swap Requests Yet</h5>
+            <p style="margin: 0 0 16px; color: hsl(var(--muted-foreground));">You haven't made any swap requests yet.</p>
+            <a href="/search" class="btn waves-effect waves-light" style="background-color: hsl(var(--primary)); border-radius: 999px; box-shadow: none;">
+              <i class="material-icons left">search</i>
+              Browse Items
+            </a>
+          </div>
+        <% } else { %>
+          <% swapRequests.forEach(function(request) { %>
+            <div style="background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); margin-bottom: 20px;">
+              
+              <!-- Status Badge -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <span style="font-size: 0.75rem; padding: 6px 12px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+                  <% if (request.status === 'pending') { %>
+                    background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7;
+                  <% } else if (request.status === 'accepted') { %>
+                    background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;
+                  <% } else if (request.status === 'rejected') { %>
+                    background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;
+                  <% } else if (request.status === 'cancelled') { %>
+                    background-color: #e2e3e5; color: #6c757d; border: 1px solid #d6d8db;
+                  <% } %>
+                ">
+                  <%= request.status %>
+                </span>
+                <div style="color: hsl(var(--muted-foreground)); font-size: 0.8rem;">
+                  <%= new Date(request.createdAt).toLocaleDateString('en-AU') %>
+                </div>
+              </div>
+
+              <div class="row" style="margin: 0;">
+                <!-- Your Offered Item -->
+                <div class="col s12 m6" style="padding: 0 8px 0 0;">
+                  <h6 style="margin: 0 0 12px; font-weight: 600; color: hsl(var(--foreground)); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Your Offer</h6>
+                  <% if (request.offeredItem) { %>
+                    <div style="display: flex; gap: 12px;">
+                      <div style="width: 80px; height: 80px; background-color: hsl(var(--muted)); display: flex; align-items: center; justify-content: center; border-radius: var(--radius); overflow: hidden; flex-shrink: 0;">
+                        <% if (request.offeredItem.imageUrl) { %>
+                          <img src="<%= request.offeredItem.imageUrl %>" alt="<%= request.offeredItem.title %>" style="width: 100%; height: 100%; object-fit: cover;" />
+                        <% } else { %>
+                          <i class="material-icons" style="font-size: 32px; color: hsl(var(--muted-foreground)); opacity: 0.6;">image</i>
+                        <% } %>
+                      </div>
+                      <div style="flex: 1;">
+                        <h6 style="margin: 0 0 4px; font-weight: 600; color: hsl(var(--foreground));"><%= request.offeredItem.title %></h6>
+                        <% if (request.offeredItem.itemType) { %>
+                          <span style="font-size: 0.7rem; padding: 4px 8px; border-radius: 999px; background-color: hsl(var(--muted)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border));">
+                            <%= request.offeredItem.itemType %>
+                          </span>
+                        <% } %>
+                      </div>
+                    </div>
+                  <% } else { %>
+                    <p style="color: hsl(var(--muted-foreground)); font-style: italic;">Item no longer available</p>
+                  <% } %>
+                </div>
+
+                <!-- Target Item -->
+                <div class="col s12 m6" style="padding: 0 0 0 8px;">
+                  <h6 style="margin: 0 0 12px; font-weight: 600; color: hsl(var(--foreground)); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">For This Item</h6>
+                  <% if (request.targetItem) { %>
+                    <div style="display: flex; gap: 12px;">
+                      <div style="width: 80px; height: 80px; background-color: hsl(var(--muted)); display: flex; align-items: center; justify-content: center; border-radius: var(--radius); overflow: hidden; flex-shrink: 0;">
+                        <% if (request.targetItem.imageUrl) { %>
+                          <img src="<%= request.targetItem.imageUrl %>" alt="<%= request.targetItem.title %>" style="width: 100%; height: 100%; object-fit: cover;" />
+                        <% } else { %>
+                          <i class="material-icons" style="font-size: 32px; color: hsl(var(--muted-foreground)); opacity: 0.6;">image</i>
+                        <% } %>
+                      </div>
+                      <div style="flex: 1;">
+                        <h6 style="margin: 0 0 4px; font-weight: 600; color: hsl(var(--foreground));"><%= request.targetItem.title %></h6>
+                        <% if (request.targetItem.itemType) { %>
+                          <span style="font-size: 0.7rem; padding: 4px 8px; border-radius: 999px; background-color: hsl(var(--muted)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border));">
+                            <%= request.targetItem.itemType %>
+                          </span>
+                        <% } %>
+                        <div style="margin-top: 6px; color: hsl(var(--muted-foreground)); font-size: 0.8rem;">
+                          Posted by <%= request.targetItem.ownerName %>
+                        </div>
+                      </div>
+                    </div>
+                  <% } else { %>
+                    <p style="color: hsl(var(--muted-foreground)); font-style: italic;">Item no longer available</p>
+                  <% } %>
+                </div>
+              </div>
+
+              <!-- Message -->
+              <% if (request.message) { %>
+                <div style="margin-top: 20px; padding: 16px; background-color: hsl(var(--muted)); border: 1px solid hsl(var(--border)); border-radius: var(--radius);">
+                  <h6 style="margin: 0 0 8px; font-weight: 600; color: hsl(var(--foreground)); font-size: 0.9rem;">Your Message</h6>
+                  <p style="margin: 0; color: hsl(var(--foreground)); font-size: 0.9rem; line-height: 1.5;"><%= request.message %></p>
+                </div>
+              <% } %>
+
+              <!-- Status Details -->
+              <% if (request.status === 'accepted' && request.acceptedAt) { %>
+                <div style="margin-top: 16px; padding: 12px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: var(--radius);">
+                  <div style="color: #155724; font-size: 0.9rem;">
+                    <i class="material-icons" style="font-size: 16px; vertical-align: text-bottom; margin-right: 4px;">check_circle</i>
+                    Accepted on <%= new Date(request.acceptedAt).toLocaleDateString('en-AU') %>
+                  </div>
+                </div>
+              <% } else if (request.status === 'rejected' && request.rejectedAt) { %>
+                <div style="margin-top: 16px; padding: 12px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: var(--radius);">
+                  <div style="color: #721c24; font-size: 0.9rem;">
+                    <i class="material-icons" style="font-size: 16px; vertical-align: text-bottom; margin-right: 4px;">cancel</i>
+                    Rejected on <%= new Date(request.rejectedAt).toLocaleDateString('en-AU') %>
+                  </div>
+                </div>
+              <% } else if (request.status === 'cancelled' && request.cancelledAt) { %>
+                <div style="margin-top: 16px; padding: 12px; background-color: #e2e3e5; border: 1px solid #d6d8db; border-radius: var(--radius);">
+                  <div style="color: #6c757d; font-size: 0.9rem;">
+                    <i class="material-icons" style="font-size: 16px; vertical-align: text-bottom; margin-right: 4px;">block</i>
+                    Cancelled on <%= new Date(request.cancelledAt).toLocaleDateString('en-AU') %>
+                  </div>
+                </div>
+              <% } else if (request.status === 'pending') { %>
+                <div style="margin-top: 16px;">
+                  <form method="POST" action="/swaps/<%= request.swapRequestId %>/cancel" style="display: inline;">
+                    <button type="submit" class="btn waves-effect waves-light" style="background-color: #6c757d; border-radius: 999px; box-shadow: none; padding: 0 16px; height: 36px; line-height: 36px; font-size: 0.85rem;" onclick="return confirm('Are you sure you want to cancel this swap request?')">
+                      <i class="material-icons left" style="font-size: 16px;">close</i>
+                      Cancel Request
+                    </button>
+                  </form>
+                </div>
+              <% } %>
+
+            </div>
+          <% }); %>
+        <% } %>
+      </div>
+    </div>
+
+  </div>
+</section>

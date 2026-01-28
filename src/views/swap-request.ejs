@@ -1,0 +1,317 @@
+<!-- Swap Request Form Section -->
+<section style="padding: 56px 0; min-height: calc(100vh - 64px - 200px); background-color: hsl(var(--background));">
+  <div class="container">
+    <div class="row" style="margin-bottom: 18px;">
+      <div class="col s12">
+        <h2 style="font-size: 2rem; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 6px;">Request Swap</h2>
+        <p style="color: hsl(var(--muted-foreground)); margin: 0;">Make an offer to swap with this item.</p>
+      </div>
+    </div>
+
+    <!-- Show errors -->
+    <% if (errors && errors.length > 0) { %>
+      <div class="row">
+        <div class="col s12">
+          <div style="background-color: #ffebee; border: 1px solid #f44336; border-radius: var(--radius); padding: 16px; margin-bottom: 20px;">
+            <h6 style="color: #c62828; margin: 0 0 8px; font-weight: 600;">Please correct the following errors:</h6>
+            <ul style="color: #c62828; margin: 0; padding-left: 20px;">
+              <% errors.forEach(error => { %>
+                <li><%= error %></li>
+              <% }); %>
+            </ul>
+          </div>
+        </div>
+      </div>
+    <% } %>
+
+    <div class="row">
+      <!-- Target Item Info -->
+      <div class="col s12 l5">
+        <div style="background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); margin-bottom: 20px;">
+          <h5 style="margin: 0 0 16px; font-weight: 700; color: hsl(var(--foreground)); font-size: 1.2rem;">Item You Want</h5>
+          
+          <div style="height: 200px; background-color: hsl(var(--muted)); display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius: var(--radius); margin-bottom: 16px;">
+            <% if (item.imageUrl) { %>
+              <img src="<%= item.imageUrl %>" alt="<%= item.title %>" style="width: 100%; height: 100%; object-fit: cover;" />
+            <% } else { %>
+              <i class="material-icons" style="font-size: 64px; color: hsl(var(--muted-foreground)); opacity: 0.6;">image</i>
+            <% } %>
+          </div>
+
+          <h6 style="margin: 0 0 8px; font-weight: 600; color: hsl(var(--foreground));"><%= item.title %></h6>
+          <p style="margin: 0 0 12px; color: hsl(var(--muted-foreground)); font-size: 0.9rem; line-height: 1.5;">
+            <%= item.description %>
+          </p>
+          
+          <% if (item.itemType) { %>
+            <span style="font-size: 0.75rem; padding: 6px 10px; border-radius: 999px; background-color: hsl(var(--muted)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border));">
+              <%= item.itemType %>
+            </span>
+          <% } %>
+
+          <div style="margin-top: 16px; color: hsl(var(--muted-foreground)); font-size: 0.8rem;">
+            Posted by <%= item.ownerName %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Swap Request Form -->
+      <div class="col s12 l7">
+        <form method="POST" action="/swaps/request/<%= item.itemId %>" enctype="multipart/form-data">
+          <div style="background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+            
+            <h5 style="margin: 0 0 20px; font-weight: 700; color: hsl(var(--foreground)); font-size: 1.2rem;">Your Offer</h5>
+
+            <!-- Option Toggle -->
+            <div style="margin-bottom: 24px;">
+              <p style="margin: 0 0 12px; color: hsl(var(--foreground)); font-weight: 600;">How would you like to make your offer?</p>
+              <label>
+                <input name="offerType" type="radio" value="existing" <%= (!locals.formData || !locals.formData.createNewItem) ? 'checked' : '' %> onchange="toggleOfferType()" />
+                <span>Select from my existing items</span>
+              </label>
+              <br style="margin-bottom: 8px;">
+              <label>
+                <input name="offerType" type="radio" value="create" <%= (locals.formData && locals.formData.createNewItem) ? 'checked' : '' %> onchange="toggleOfferType()" />
+                <span>Create a new item to offer</span>
+              </label>
+            </div>
+
+            <!-- Existing Item Selection -->
+            <div id="existing-item-section" style="display: <%= (locals.formData && locals.formData.createNewItem) ? 'none' : 'block' %>;">
+              <div class="input-field" style="margin-bottom: 32px;">
+                <i class="material-icons prefix" style="color: hsl(var(--muted-foreground));">inventory</i>
+                <select id="offeredItemId" name="offeredItemId">
+                  <option value="" disabled <%= (!locals.formData || !locals.formData.offeredItemId) ? 'selected' : '' %>>Choose an item to offer</option>
+                  <% if (userItems && userItems.length > 0) { %>
+                    <% userItems.forEach(function(userItem) { %>
+                      <option value="<%= userItem.itemId %>" <%= (locals.formData && locals.formData.offeredItemId === userItem.itemId) ? 'selected' : '' %>>
+                        <%= userItem.title %> (<%= userItem.itemType || 'No category' %>)
+                      </option>
+                    <% }); %>
+                  <% } %>
+                </select>
+                <label>Select Existing Item</label>
+                <span class="helper-text" style="color: hsl(var(--muted-foreground));">Choose one of your existing items to offer</span>
+              </div>
+
+              <% if (!userItems || userItems.length === 0) { %>
+                <div style="margin-bottom: 20px; padding: 16px; background-color: hsl(var(--muted)); border: 1px solid hsl(var(--border)); border-radius: var(--radius);">
+                  <p style="margin: 0; color: hsl(var(--muted-foreground)); font-size: 0.9rem;">
+                    <i class="material-icons" style="font-size: 18px; vertical-align: text-bottom;">info</i>
+                    You don't have any existing items. You can create a new item above or <a href="/items/new" style="color: hsl(var(--primary));">post one first</a>.
+                  </p>
+                </div>
+              <% } %>
+            </div>
+
+            <!-- Create New Item Section -->
+            <div id="create-item-section" style="display: <%= (locals.formData && locals.formData.createNewItem) ? 'block' : 'none' %>;">
+              <input type="hidden" name="createNewItem" id="createNewItem" value="<%= (locals.formData && locals.formData.createNewItem) ? 'true' : '' %>">
+              
+              <!-- Item Title -->
+              <div class="input-field" style="margin-bottom: 24px;">
+                <i class="material-icons prefix" style="color: hsl(var(--muted-foreground));">title</i>
+                <input id="title" name="title" type="text" maxlength="100" value="<%= (locals.formData && locals.formData.title) ? locals.formData.title : '' %>" />
+                <label for="title">Item Title</label>
+                <span class="helper-text" style="color: hsl(var(--muted-foreground));">What are you offering to swap?</span>
+              </div>
+
+              <!-- Item Description -->
+              <div class="input-field" style="margin-bottom: 24px;">
+                <i class="material-icons prefix" style="color: hsl(var(--muted-foreground));">description</i>
+                <textarea id="description" name="description" class="materialize-textarea" maxlength="1000" data-length="1000"><%= (locals.formData && locals.formData.description) ? locals.formData.description : '' %></textarea>
+                <label for="description">Item Description</label>
+                <span class="helper-text" style="color: hsl(var(--muted-foreground));">Describe your item in detail</span>
+              </div>
+
+              <!-- Item Category -->
+              <div class="input-field" style="margin-bottom: 24px;">
+                <i class="material-icons prefix" style="color: hsl(var(--muted-foreground));">category</i>
+                <select id="itemType" name="itemType">
+                  <option value="" disabled <%= (!locals.formData || !locals.formData.itemType) ? 'selected' : '' %>>Choose a category</option>
+                  <% if (categories && categories.length > 0) { %>
+                    <% categories.forEach(function(category) { %>
+                      <option value="<%= category %>" <%= (locals.formData && locals.formData.itemType === category) ? 'selected' : '' %>>
+                        <%= category %>
+                      </option>
+                    <% }); %>
+                  <% } else { %>
+                    <!-- Debug: Show if categories are missing -->
+                    <option value="" disabled>No categories available</option>
+                  <% } %>
+                </select>
+                <label for="itemType">Item Category</label>
+                <span class="helper-text" style="color: hsl(var(--muted-foreground));">What category does your item belong to?</span>
+              </div>
+
+              <!-- Item Image Option Toggle -->
+              <div style="margin-bottom: 20px;">
+                <p style="margin: 0 0 12px; color: hsl(var(--foreground)); font-weight: 600;">Add an image (optional)</p>
+                <label>
+                  <input name="imageType" type="radio" value="none" <%= (!locals.formData || (!locals.formData.imageUrl && !locals.formData.imageFile)) ? 'checked' : '' %> onchange="toggleImageType()" />
+                  <span>No image</span>
+                </label>
+                <br style="margin-bottom: 8px;">
+                <label>
+                  <input name="imageType" type="radio" value="url" <%= (locals.formData && locals.formData.imageUrl) ? 'checked' : '' %> onchange="toggleImageType()" />
+                  <span>Link to existing image</span>
+                </label>
+                <br style="margin-bottom: 8px;">
+                <label>
+                  <input name="imageType" type="radio" value="upload" <%= (locals.formData && locals.formData.imageFile) ? 'checked' : '' %> onchange="toggleImageType()" />
+                  <span>Upload new image</span>
+                </label>
+              </div>
+
+              <!-- Image URL Section -->
+              <div id="image-url-section" style="display: <%= (locals.formData && locals.formData.imageUrl) ? 'block' : 'none' %>; margin-bottom: 24px;">
+                <div class="input-field">
+                  <i class="material-icons prefix" style="color: hsl(var(--muted-foreground));">link</i>
+                  <input id="imageUrl" name="imageUrl" type="url" value="<%= (locals.formData && locals.formData.imageUrl) ? locals.formData.imageUrl : '' %>" />
+                  <label for="imageUrl">Image URL</label>
+                  <span class="helper-text" style="color: hsl(var(--muted-foreground));">Enter a web link to your item's image</span>
+                </div>
+              </div>
+
+              <!-- Image Upload Section -->
+              <div id="image-upload-section" style="display: <%= (locals.formData && locals.formData.imageFile) ? 'block' : 'none' %>; margin-bottom: 24px;">
+                <div class="file-field input-field">
+                  <div class="btn" style="background-color: hsl(var(--muted)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border));">
+                    <i class="material-icons left">cloud_upload</i>
+                    <span>Choose Image</span>
+                    <input type="file" name="image" accept="image/*">
+                  </div>
+                  <div class="file-path-wrapper">
+                    <input class="file-path validate" type="text" placeholder="Select an image file">
+                  </div>
+                  <span class="helper-text" style="color: hsl(var(--muted-foreground));">Upload a photo of your item (max 10MB)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Message -->
+            <div class="input-field" style="margin-bottom: 32px;">
+              <i class="material-icons prefix" style="color: hsl(var(--muted-foreground));">message</i>
+              <textarea id="message" name="message" class="materialize-textarea" required maxlength="1000" data-length="1000"><%= (locals.formData && locals.formData.message) ? locals.formData.message : '' %></textarea>
+              <label for="message">Message</label>
+              <span class="helper-text" style="color: hsl(var(--muted-foreground));">Tell the owner why you'd like to swap and any details about your offer</span>
+            </div>
+
+            <!-- Actions -->
+            <div style="display:flex; gap: 12px; flex-wrap: wrap;">
+              <button type="submit" class="btn waves-effect waves-light" style="background-color: hsl(var(--primary)); border-radius: 999px; box-shadow: none;">
+                <i class="material-icons left">send</i>
+                Send Swap Request
+              </button>
+              <a href="/search" class="btn-secondary waves-effect waves-light" style="border-radius: 999px;">
+                <i class="material-icons left">arrow_back</i>
+                Back to Search
+              </a>
+            </div>
+
+            <% if (!userItems || userItems.length === 0) { %>
+              <div style="margin-top: 20px; padding: 16px; background-color: hsl(var(--muted)); border: 1px solid hsl(var(--border)); border-radius: var(--radius);">
+                <p style="margin: 0; color: hsl(var(--muted-foreground)); font-size: 0.9rem;">
+                  <i class="material-icons" style="font-size: 18px; vertical-align: text-bottom;">info</i>
+                  No existing items? No problem! You can create a new item to offer above.
+                </p>
+              </div>
+            <% } %>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize Materialize components
+  try {
+    var selects = document.querySelectorAll('select');
+    if (selects.length > 0) {
+      M.FormSelect.init(selects);
+      console.log('Initialized', selects.length, 'select elements');
+    }
+    
+    var textareas = document.querySelectorAll('textarea[data-length]');
+    if (textareas.length > 0) {
+      M.CharacterCounter.init(textareas);
+    }
+    
+    var allTextareas = document.querySelectorAll('textarea');
+    if (allTextareas.length > 0) {
+      M.textareaAutoResize(allTextareas);
+    }
+  } catch (error) {
+    console.error('Error initializing Materialize components:', error);
+  }
+  
+  toggleOfferType();
+  toggleImageType();
+});
+
+function toggleImageType() {
+  const noneRadio = document.querySelector('input[name="imageType"][value="none"]');
+  const urlRadio = document.querySelector('input[name="imageType"][value="url"]');
+  const uploadRadio = document.querySelector('input[name="imageType"][value="upload"]');
+  const urlSection = document.getElementById('image-url-section');
+  const uploadSection = document.getElementById('image-upload-section');
+  const imageUrlInput = document.getElementById('imageUrl');
+  
+  if (!urlSection || !uploadSection) return; // Exit if elements don't exist
+  
+  if (urlRadio && urlRadio.checked) {
+    urlSection.style.display = 'block';
+    uploadSection.style.display = 'none';
+    if (imageUrlInput) imageUrlInput.setAttribute('required', 'required');
+  } else if (uploadRadio && uploadRadio.checked) {
+    urlSection.style.display = 'none';
+    uploadSection.style.display = 'block';
+    if (imageUrlInput) imageUrlInput.removeAttribute('required');
+  } else {
+    urlSection.style.display = 'none';
+    uploadSection.style.display = 'none';
+    if (imageUrlInput) imageUrlInput.removeAttribute('required');
+  }
+}
+
+function toggleOfferType() {
+  const existingRadio = document.querySelector('input[name="offerType"][value="existing"]');
+  const createRadio = document.querySelector('input[name="offerType"][value="create"]');
+  const existingSection = document.getElementById('existing-item-section');
+  const createSection = document.getElementById('create-item-section');
+  const createNewItemInput = document.getElementById('createNewItem');
+  const offeredItemIdSelect = document.getElementById('offeredItemId');
+  const titleInput = document.getElementById('title');
+  
+  if (createRadio && createRadio.checked) {
+    if (existingSection) existingSection.style.display = 'none';
+    if (createSection) createSection.style.display = 'block';
+    if (createNewItemInput) createNewItemInput.value = 'true';
+    if (offeredItemIdSelect) offeredItemIdSelect.removeAttribute('required');
+    if (titleInput) titleInput.setAttribute('required', 'required');
+    // Show image options when creating new item
+    toggleImageType();
+  } else {
+    if (existingSection) existingSection.style.display = 'block';
+    if (createSection) createSection.style.display = 'none';
+    if (createNewItemInput) createNewItemInput.value = '';
+    if (offeredItemIdSelect) offeredItemIdSelect.setAttribute('required', 'required');
+    if (titleInput) titleInput.removeAttribute('required');
+  }
+  
+  // Reinitialize select elements after visibility change
+  setTimeout(function() {
+    try {
+      var visibleSelects = document.querySelectorAll('select');
+      M.FormSelect.init(visibleSelects);
+      console.log('Reinitialized select elements');
+    } catch (error) {
+      console.error('Error reinitializing select elements:', error);
+    }
+  }, 100);
+}
+</script>

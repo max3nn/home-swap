@@ -51,5 +51,51 @@
       </div>
     </div>
 
+    <!-- Swap Requests Section -->
+    <div class="row" style="margin-top: 24px;">
+      <div class="col s12">
+        <div style="background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+          <h5 style="margin: 0 0 16px; font-weight: 700; color: hsl(var(--foreground)); font-size: 1.2rem;">Swap Activity</h5>
+          <p style="margin: 0 0 20px; color: hsl(var(--muted-foreground)); font-size: 0.9rem;">
+            Manage your swap requests and view activity from other users.
+          </p>
+          
+          <div class="row" style="margin: 0;">
+            <div class="col s12 m6" style="padding: 0 8px 0 0; margin-bottom: 16px;">
+              <a href="/swaps/my-requests" style="display: block; text-decoration: none; color: inherit;">
+                <div style="background-color: hsl(var(--muted)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 16px; transition: all 0.2s; cursor: pointer;" 
+                     onmouseover="this.style.borderColor='hsl(var(--primary))'"
+                     onmouseout="this.style.borderColor='hsl(var(--border))'">
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="material-icons" style="color: hsl(var(--primary)); font-size: 24px;">send</i>
+                    <div>
+                      <div style="font-weight: 600; color: hsl(var(--foreground)); font-size: 1rem;">My Requests</div>
+                      <div style="color: hsl(var(--muted-foreground)); font-size: 0.8rem;">Swap requests you've made</div>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            </div>
+            
+            <div class="col s12 m6" style="padding: 0 0 0 8px; margin-bottom: 16px;">
+              <a href="/swaps/received" style="display: block; text-decoration: none; color: inherit;">
+                <div style="background-color: hsl(var(--muted)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 16px; transition: all 0.2s; cursor: pointer;" 
+                     onmouseover="this.style.borderColor='hsl(var(--primary))'"
+                     onmouseout="this.style.borderColor='hsl(var(--border))'">
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="material-icons" style="color: hsl(var(--primary)); font-size: 24px;">inbox</i>
+                    <div>
+                      <div style="font-weight: 600; color: hsl(var(--foreground)); font-size: 1rem;">Received Requests</div>
+                      <div style="color: hsl(var(--muted-foreground)); font-size: 0.8rem;">Requests from other users</div>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
