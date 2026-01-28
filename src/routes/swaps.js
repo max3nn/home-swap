@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
-const { v4: uuidv4 } = require('uuid');
 
 const SwapRequest = require('../models/SwapRequest');
 const Item = require('../models/Item');
@@ -212,7 +211,7 @@ router.post('/request/:itemId', upload.single('image'), async (req, res, next) =
 
         // Create swap request
         const swapRequest = new SwapRequest({
-            swapRequestId: uuidv4(),
+            swapRequestId: new mongoose.Types.ObjectId().toString(),
             itemId: targetItem.itemId,
             message: message.trim(),
             imageUrl: offeredItem.imageUrl || (offeredItem.hasImage && offeredItem.image ? `/items/${offeredItem.itemId}/image` : null),
