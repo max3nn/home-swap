@@ -133,6 +133,9 @@
                           <a href="/items/<%= item.itemId %>/edit" class="btn-primary waves-effect waves-light" style="white-space: nowrap;">
                             Edit
                           </a>
+                          <button class="btn waves-effect waves-light delete-item-btn" style="background-color: #ef4444; white-space: nowrap;" data-item-id="<%= item.itemId %>" data-item-title="<%= item.title %>">
+                            Delete
+                          </button>
                         <% } %>
                         <button class="btn-secondary waves-effect waves-light" disabled style="opacity: 0.75;">
                           Request Swap
@@ -153,9 +156,29 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Materialize select elements
     const selects = document.querySelectorAll('select');
     if (window.M && selects && selects.length) {
       M.FormSelect.init(selects);
     }
+
+    // Handle delete button clicks
+    const deleteButtons = document.querySelectorAll('.delete-item-btn');
+    deleteButtons.forEach(function(button) {
+      button.addEventListener('click', function() {
+        const itemId = this.getAttribute('data-item-id');
+        const itemTitle = this.getAttribute('data-item-title');
+        
+        if (confirm('Are you sure you want to delete "' + itemTitle + '"?\n\nThis action cannot be undone.')) {
+          // Create a form to submit POST request to delete endpoint
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = '/items/' + itemId + '/delete';
+          
+          document.body.appendChild(form);
+          form.submit();
+        }
+      });
+    });
   });
 </script>

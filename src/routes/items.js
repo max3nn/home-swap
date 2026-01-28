@@ -377,6 +377,58 @@ router.post('/:itemId/edit', upload.single('image'), async (req, res, next) => {
   }
 });
 
+// POST /items/:itemId/delete - Delete an item
+router.post('/:itemId/delete', async (req, res, next) => {
+  try {
+    if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+      return res.status(503).render('error', {
+        title: 'Delete Unavailable',
+        message: 'Database connection unavailable. Please try again later.',
+        error: {},
+      });
+    }
+
+    const itemId = (req.params.itemId || '').trim();
+    if (!itemId) {
+      return res.status(400).render('error', {
+        title: 'Invalid Item',
+        message: 'Item ID is required.',
+        error: {},
+      });
+    }
+
+    const user = req.session.user;
+    const item = await Item.findOne({ itemId });
+
+    if (!item) {
+      return res.status(404).render('error', {
+        title: 'Item Not Found',
+        message: 'The item you are trying to delete does not exist.',
+        error: {},
+      });
+    }
+
+    // Verify that the user is the owner
+    if (item.ownerId !== user.userId) {
+      console.log(`[ITEM_DELETE_ATTEMPT] User ${user.userId} attempted to delete item ${itemId} owned by ${item.ownerId}`);
+      return res.status(403).render('error', {
+        title: 'Access Denied',
+        message: 'You can only delete your own items.',
+        error: {},
+      });
+    }
+
+    // Delete the item
+    await Item.deleteOne({ itemId });
+
+    console.log(`[ITEM_DELETE] User ${user.userId} deleted item ${itemId}`);
+
+    return res.redirect('/search');
+  } catch (err) {
+    return next(err);
+  }
+});
+
 // Multer / upload error handler
 router.use(async (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
