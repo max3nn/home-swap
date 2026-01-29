@@ -4,123 +4,53 @@
 
 ```mermaid
 sequenceDiagram
-    participant U as New User
+    participant U as User
     participant W as Web Browser
     participant S as Express Server
     participant DB as MongoDB
-    participant BCR as BCrypt (via User model)
     participant SESS as Session Store
 
-    Note over U,SESS: Account Registration Process
+    Note over U,SESS: Registration Process
+    U->>W: Fill registration form (name, email, password)
+    W->>S: POST /auth/register
+    S->>S: Validate form data
+    S->>DB: Check if user exists
 
-    U->>W: Visit registration page
-    W->>S: GET /auth/register
-    S-->>W: Render register.ejs form
-    W-->>U: Display registration form
-
-    U->>W: Fill form (name, email, password)
-    W->>S: POST /auth/register with JSON data
-    S->>S: Check database connection
-    S->>S: Validate form data (required fields, email format, password length)
-
-    alt Validation fails
-        S-->>W: JSON response with validation errors
-        W-->>U: Show validation errors
-    else Validation passes
-        S->>DB: User.findOne({$or: [{email}, {username}]})
-        DB-->>S: Check if user exists
-
-        alt User already exists
-            S-->>W: JSON response 409 "User already exists"
-            W-->>U: Show "User already exists" error
-        else User doesn't exist
-            S->>S: Generate unique userId (mongoose ObjectId)
-            S->>S: Create new User({userId, username, email, password, userrole})
-            S->>BCR: user.save() - triggers pre-save password hashing
-            BCR-->>S: User saved with hashed password
-            S-->>W: JSON response 201 "Account registered successfully"
-            W-->>U: Show success, redirect to login
-        end
+    alt User exists
+        DB-->>W: "User already exists" error
+    else New user
+        S->>DB: Create User with hashed password
+        DB-->>W: Registration successful
     end
 
     Note over U,SESS: Login Process
+    U->>W: Enter login credentials
+    W->>S: POST /auth/login
+    S->>DB: Find user and verify password
 
-    U->>W: Visit login page
-    W->>S: GET /auth/login
-
-    alt Already logged in
-        S->>SESS: Check req.session.user
-        SESS-->>S: User session exists
-        S-->>W: Redirect to /search
-        W-->>U: Redirect to main app
-    else Not logged in
-        S-->>W: Render login.ejs form
-        W-->>U: Display login form
+    alt Valid credentials
+        S->>SESS: Create session
+        S-->>W: Login successful, redirect to /search
+    else Invalid credentials
+        S-->>W: "Invalid credentials" error
     end
 
-    U->>W: Enter email and password
-    W->>S: POST /auth/login with JSON data
-    S->>S: Check database connection
-    S->>S: Validate input (email format, required fields)
-    S->>DB: User.findOne({email: trimmedEmail})
-    DB-->>S: User record or null
-
-    alt User not found
-        S-->>W: JSON response 401 "Invalid email or password"
-        W-->>U: Show "Invalid credentials" error
-    else User found
-        S->>BCR: user.comparePassword(password)
-        BCR-->>S: Password comparison result
-
-        alt Password incorrect
-            S-->>W: JSON response 401 "Invalid email or password"
-            W-->>U: Show "Invalid credentials" error
-        else Password correct
-            S->>SESS: req.session.user = {userId, username, email, userrole}
-            SESS-->>S: Session created
-            S-->>W: JSON response 200 "Login successful" + user data
-            W-->>U: Successfully logged in, redirect to /search
-        end
-    end
-
-    Note over U,SESS: Protected Route Access & Session Management
-
-    U->>W: Try to access protected route (e.g., /swaps/*)
-    W->>S: GET protected route
-    S->>SESS: Check req.session.user in middleware
-
-    alt No session/not logged in
-        SESS-->>S: No user session
-        S-->>W: Redirect to /auth/login
-        W-->>U: Redirected to login page
-    else Valid session
-        SESS-->>S: User session data
-        S-->>W: Render protected page
-        W-->>U: Access granted to protected content
-    end
-
-    Note over U,SESS: Session Info & Logout
-
-    U->>W: Check login status
-    W->>S: GET /auth/me
-    S->>SESS: Check req.session.user
+    Note over U,SESS: Protected Routes
+    U->>W: Access protected route
+    W->>S: Request protected resource
+    S->>SESS: Check session
 
     alt Authenticated
-        SESS-->>S: User session data
-        S-->>W: JSON response with user data
-        W-->>U: Show user info
+        S-->>W: Serve protected content
     else Not authenticated
-        S-->>W: JSON response 401 "Not authenticated"
-        W-->>U: Redirect to login
+        S-->>W: Redirect to /auth/login
     end
 
-    U->>W: Click logout button
+    Note over U,SESS: Logout
+    U->>W: Click logout
     W->>S: POST /auth/logout
-    S->>SESS: req.session.destroy()
-    SESS-->>S: Session cleared
-    S->>S: res.clearCookie('connect.sid')
-    S-->>W: JSON response 200 "Logged out"
-    W-->>U: Logged out, redirect to login
+    S->>SESS: Destroy session
+    S-->>W: Logged out
 ```
 
 ## 2. Item Creation Feature Flow
@@ -131,108 +61,41 @@ sequenceDiagram
     participant W as Web Browser
     participant S as Express Server
     participant DB as MongoDB
-    participant M as Multer
-    participant V as Validator
 
-    Note over U,V: Item Creation Process
+    Note over U,DB: Item Creation Process
+    U->>W: Fill item form (title, description, image)
+    W->>S: POST /items/new with image upload
+    S->>S: Check authentication & validate form
 
-    U->>W: Navigate to create new item
-    W->>S: GET /items/new
-    S->>S: Check authentication middleware
-
-    alt User not authenticated
-        S-->>W: Redirect to /auth/login
-        W-->>U: Show login page
-    else User authenticated
-        S->>S: Load ITEM_CATEGORIES from config
-        S-->>W: Render item-new.ejs with categories
-        W-->>U: Show item creation form
-    end
-
-    U->>W: Fill form (title, description, category, wanted categories, image)
-    W->>S: POST /items/new (multipart/form-data)
-    S->>M: Multer processes file upload to memory
-
-    alt File upload error (size > 10MB or not image)
-        M-->>S: Multer error
-        S-->>W: Render item-new.ejs with file error
-        W-->>U: Show "Invalid file" or "Too large" error
-    else File upload successful
-        M-->>S: req.file.buffer with image data
-        S->>V: Validate form data (title, description required)
-        V-->>S: Validation results
-
-        alt Validation fails
-            S-->>W: Render item-new.ejs with errors
-            W-->>U: Show validation errors
-        else Validation passes
-            S->>S: Generate unique itemId (mongoose ObjectId)
-            S->>S: Set imageUrl = `/items/${itemId}/image`
-
-            S->>DB: Item.create({
-            Note right of S: itemId: ObjectId,<br/>title, description,<br/>itemType, wantedCategories,<br/>ownerId: user.userId,<br/>imageUrl: `/items/${itemId}/image`,<br/>image: {data: Buffer, contentType},<br/>hasImage: true
-            S->>DB: })
-            DB-->>S: Item stored with binary image data
-
-            S-->>W: Redirect to /search with success
-            W-->>U: Show "Item created successfully" notification
-        end
-    end
-
-    Note over U,V: Image Serving Process
-
-    U->>W: Browse search page with new item
-    W->>S: GET /search
-    S->>DB: Item.find() with owner names
-    DB-->>S: Items with imageUrl paths
-    S-->>W: Render search.ejs with imageUrl references
-    W-->>U: Display items with image URLs
-
-    W->>S: GET /items/:itemId/image (for each image)
-    S->>DB: Item.findOne({itemId}).select('image')
-    DB-->>S: Binary image data and contentType
-    S->>S: Convert BSON Binary to Buffer using toBuffer()
-    S->>S: Sniff content type from buffer headers
-    S-->>W: Send image buffer with proper headers
-    W-->>U: Display images in search results
-
-    Note over U,V: Item Management
-
-    U->>W: View own items in account page
-    W->>S: GET /account
-    S->>DB: Item.find({ownerId: user.userId})
-    DB-->>S: User's items
-    S-->>W: Render account.ejs with user's items
-    W-->>U: Show owned items with edit/manage options
-
-    U->>W: Click edit item
-    W->>S: GET /items/:itemId/edit
-    S->>DB: Item.findOne({itemId, ownerId})
-
-    alt Item not found or not owner
-        S-->>W: Render error page with 403/404
-        W-->>U: Show "Access denied" or "Not found" error
-    else Item found and user is owner
-        DB-->>S: Item details
-        S-->>W: Render item-edit.ejs with current data
-        W-->>U: Show edit form pre-populated
-
-        U->>W: Update item details and submit
-        W->>S: POST /items/:itemId/edit
-        S->>M: Process new image upload (if provided)
-        S->>V: Validate updated data
-
-        alt New image uploaded
-            S->>S: item.image.data = req.file.buffer
-            S->>S: item.imageUrl = `/items/${itemId}/image?v=${timestamp}`
-            S->>S: item.markModified('image')
-        end
-
-        S->>DB: item.save() - update document with new data
-        DB-->>S: Item updated successfully
+    alt Validation fails
+        S-->>W: Show validation errors
+    else Validation passes
+        S->>S: Process image to memory buffer
+        S->>DB: Item.create() with image data
+        DB-->>S: Item created with unique ID
         S-->>W: Redirect to /search with success
-        W-->>U: Show "Item updated successfully"
     end
+
+    Note over U,DB: Item Display
+    U->>W: Browse search page
+    W->>S: GET /search
+    S->>DB: Find items with owner names
+    DB-->>S: Items with image URLs
+    S-->>W: Render search results
+
+    W->>S: GET /items/:itemId/image
+    S->>DB: Fetch image binary data
+    DB-->>S: Image buffer
+    S-->>W: Serve image
+    W-->>U: Display item with image
+
+    Note over U,DB: Item Management
+    U->>W: Edit item
+    W->>S: POST /items/:itemId/edit
+    S->>S: Verify ownership & validate
+    S->>DB: Update item with new data
+    DB-->>S: Item updated
+    S-->>W: Redirect with success
 ```
 
 ## 3. Swap Request Feature Flow
@@ -244,89 +107,49 @@ sequenceDiagram
     participant S as Express Server
     participant DB as MongoDB
     participant O as Owner
-    participant M as Multer
 
-    Note over U,M: Item Swap Request Process
-
+    Note over U,O: Swap Request Process
     U->>W: Browse search page
     W->>S: GET /search
-    S->>DB: Item.find() + User.find() + SwapRequest.find()
-    DB-->>S: Items with owner names & pending status
-    S-->>W: Render search.ejs with items
-    W-->>U: Display items with "Request Swap" buttons
+    S->>DB: Find items with owner names & swap status
+    DB-->>S: Items with swap information
+    S-->>W: Display items with "Request Swap" buttons
 
-    U->>W: Click "Request Swap" on item
-    W->>S: GET /swaps/request/:itemId
-    S->>S: Check authentication middleware
-    S->>DB: Item.findOne({itemId})
-    S->>DB: User.findOne({userId: item.ownerId})
-    S->>DB: Item.find({ownerId: user.userId})
-    DB-->>S: Target item + owner info + User's items
-    S->>S: Validate item not swapped & not own item
-    S-->>W: Render swap-request.ejs form
-    W-->>U: Show swap request form with item selection
+    U->>W: Click "Request Swap" and fill form
+    W->>S: POST /swaps/request/:itemId
+    S->>S: Validate request & check authentication
+    S->>DB: Find target item & user's offered items
 
-    U->>W: Fill form (select/create item, add message, upload image)
-    W->>S: POST /swaps/request/:itemId (multipart/form-data)
-    S->>S: Check authentication & database connection
-    S->>S: Validate form data (message, item selection)
-    S->>DB: Item.findOne({itemId}) - verify target item
-
-    alt Create new item for swap
-        S->>S: Call createItem() shared function
-        S->>M: Process image upload to memory
-        S->>DB: Item.create() with new item data
-        DB-->>S: New item created
-    else Use existing item
-        S->>DB: Item.findOne({itemId: offeredItemId, ownerId})
-        DB-->>S: Existing offered item
+    alt Create new item or use existing
+        S->>DB: Create/find offered item
     end
 
-    S->>DB: SwapRequest.findOne() - check for duplicates
+    S->>DB: SwapRequest.create() with swap details
+    DB-->>S: Swap request created
+    S-->>W: Redirect with success message
 
-    alt Duplicate request exists
-        S-->>W: Render swap-request.ejs with error
-        W-->>U: Show "Already requested" error
-    else No duplicate
-        S->>DB: SwapRequest.create({
-        Note right of S: swapRequestId: ObjectId,<br/>itemId, ownerId,<br/>offeredItemId, message,<br/>status: 'pending',<br/>imageUrl: from offered item
-        S->>DB: })
-        DB-->>S: New swap request created
-        S->>S: req.session.success = 'Swap request sent!'
-        S-->>W: Redirect to /search
-        W-->>U: Show success notification
-    end
-
-    Note over O,M: Owner Reviews Requests
-
-    O->>W: Visit received swap requests
+    Note over O,DB: Owner Reviews Request
+    O->>W: Visit received requests
     W->>S: GET /swaps/received
-    S->>S: Check authentication middleware
-    S->>DB: SwapRequest.find({itemId: {$in: userItemIds}})
-    S->>DB: Item.find() for all related items
-    S->>DB: User.find() for requester information
-    DB-->>S: Enriched swap requests with item/user data
-    S-->>W: Render swap-received.ejs
-    W-->>O: Show pending requests with full details
+    S->>DB: Find swap requests for owner's items
+    DB-->>S: Swap requests with item/user details
+    S-->>W: Display pending requests
 
-    O->>W: Click Accept/Reject on request
+    O->>W: Accept or reject request
     W->>S: POST /swaps/:requestId/respond
-    S->>DB: SwapRequest.findOne({swapRequestId})
-    S->>S: Verify ownership and status
+    S->>S: Verify ownership
 
     alt Accept request
-        S->>DB: SwapRequest.update({status: 'accepted'})
-        S->>DB: Item.update() both items to 'swapped'
-        S->>DB: SwapRequest.update() reject all other requests for both items
-        DB-->>S: All updates completed
-        S-->>W: Redirect with "Swap accepted" message
+        S->>DB: Update swap status to 'accepted'
+        S->>DB: Mark both items as 'swapped'
+        S->>DB: Reject other pending requests
     else Reject request
-        S->>DB: SwapRequest.update({status: 'rejected'})
-        DB-->>S: Request rejected
-        S-->>W: Redirect with "Swap rejected" message
+        S->>DB: Update swap status to 'rejected'
     end
 
-    W-->>O: Show action confirmation
+    DB-->>S: Updates completed
+    S-->>W: Redirect with confirmation
+    W-->>O: Show action result
 ```
 
 ## Key Components Explained
