@@ -185,22 +185,33 @@ When running with Docker Compose, the following services will be available:
 
 ## API Endpoints
 
+### Home
+
+- `GET /` - Home page
+
 ### Authentication
 
 - `GET /auth/register` - Render registration page
 - `POST /auth/register` - User registration
+- `GET /auth/login` - Render login page
 - `POST /auth/login` - User login
 - `POST /auth/logout` - User logout
 - `GET /auth/me` - Returns the currently logged-in user from session
 
+### Account
+
+- `GET /account` - View profile/account details page
+- `GET /account/edit` - Render account edit page
+- `POST /account` - Update account information
+
 ### Items
 
-- `GET /items` - Browse items
+- `GET /search` - Search and browse items with filtering by query, category, and swap status
 - `POST /items` - Create item
 - `GET /items/new` - Render posting form
-- `GET /items/:itemid` - Get item details
-- `PUT /items/:itemid` - Update item
-- `DELETE /items/:itemid` - Delete item
+- `GET /items/:itemId` - Get item details
+- `PUT /items/:itemId` - Update item
+- `DELETE /items/:itemId` - Delete item
 - `GET /items/:itemId/image` - Serve item image from MongoDB
 
 ### Swap Requests
@@ -305,9 +316,12 @@ The **Items** collection stores information about items available for swapping.
 - `title`: Name/title of the item (String, Required)
 - `description`: Detailed description of the item (String, Required)
 - `imageUrl`: URL to item image (String, Optional)
+- `image`: Binary store of image if it was uploaded (Binary, Optional)
+- `hasImage`: Boolean as to whether the item has an image or not (Boolean, Required)
 - `ownerId`: Reference to the user who owns the item (String, Foreign Key)
 - `itemType`: Category/type of item (String, Optional)
 - `status`: Current availability status - 'available' (default) or 'swapped' (String, Required)
+- `createdAt`: Timestamp when request was created (Date, Auto-generated)
 
 #### SwapRequests Collection
 
