@@ -8,8 +8,8 @@ A web-based application that enables users to exchange personal items with other
 - Item posting and management
 - Browse and search items
 - Swap request system
-- User-to-user messaging
-- Admin content moderation
+- User-to-user messaging (not yet developed)
+- Admin content moderation (not yet developed)
 - Responsive web design
 
 ## Prerequisites
@@ -229,7 +229,7 @@ erDiagram
     User ||--o{ Log : "activity_logged"
 ```
 
-### Collection Descriptions
+### Data Dictionary
 
 #### Users Collection
 
@@ -243,11 +243,7 @@ The **Users** collection stores user account information and authentication data
 - `password`: Hashed password using bcrypt (String, Required)
 - `userrole`: User role/type in the system (String, Required)
 
-**Security Features:**
-
-- Passwords are automatically hashed before saving using bcrypt
-- Pre-save and pre-insertMany middleware for password hashing
-- comparePassword method for authentication
+Note that passwords are automatically hashed before saving using bcrypt.
 
 #### Items Collection
 
@@ -262,13 +258,6 @@ The **Items** collection stores information about items available for swapping.
 - `ownerId`: Reference to the user who owns the item (String, Foreign Key)
 - `itemType`: Category/type of item (String, Optional)
 - `status`: Current availability status - 'available' (default) or 'swapped' (String, Required)
-
-**Status Field Behavior:**
-
-- Items start as 'available' when created
-- When a swap request is accepted, both items are automatically marked as 'swapped'
-- Swapped items are excluded from search results by default
-- Users can optionally include swapped items in search results
 
 #### SwapRequests Collection
 
@@ -317,14 +306,6 @@ The **Logs** collection tracks system activities and user actions for auditing.
 4. **User → Logs**: One-to-Many
    - Each user can have multiple log entries
    - Each log entry may be associated with one user (optional for system logs)
-
-### Data Types & Constraints
-
-- **String**: Text data with MongoDB ObjectId support
-- **Date**: ISO date format with automatic timestamp generation
-- **Required**: Field must be present when creating documents
-- **Unique**: Field values must be unique across the collection
-- **Optional**: Field may be omitted during document creation
 
 ### Database Indexes
 
@@ -376,18 +357,6 @@ For optimal query performance, the following indexes have been implemented:
 - **Compound Indexes**:
   - `userId + timestamp` - User's chronological activity
   - `action + timestamp` - Action-based chronological queries
-
-#### Index Benefits
-
-These indexes provide significant performance improvements for:
-
-- ✅ User dashboard loading (own items, swap requests)
-- ✅ Search and filtering operations
-- ✅ Admin queries and reporting
-- ✅ Activity logging and monitoring
-- ✅ Swap request management
-- ✅ Authentication and user lookup
-- ✅ Category-based item browsing
 
 ### Sample Data Flow
 
