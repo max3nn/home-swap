@@ -33,7 +33,7 @@ cd home-swap
 npm install
 ```
 
-### Start MongoDB with Mongo Express
+### 3. Start MongoDB with Mongo Express
 
 ```bash
 # Start MongoDB and Mongo Express for development
@@ -43,13 +43,11 @@ docker-compose up -d mongodb mongo-express
 docker-compose --profile test up -d
 ```
 
-### 4. Set up environment variables
+### 4. Set up environment variables (optional)
 
 ```bash
-# Copy the example environment file
-cp .env.example .env
-
-# Edit .env with your configuration if needed
+# Environment variables have default values but can be customized
+# Create a .env file if you need to override defaults
 ```
 
 ### 5. Start the development server
@@ -204,9 +202,12 @@ When running with Docker Compose, the following services will be available:
 - `GET /account/edit` - Render account edit page
 - `POST /account` - Update account information
 
-### Items
+### Search
 
 - `GET /search` - Search and browse items with filtering by query, category, and swap status
+
+### Items
+
 - `POST /items` - Create item
 - `GET /items/new` - Render posting form
 - `GET /items/:itemId` - Get item details
@@ -218,12 +219,11 @@ When running with Docker Compose, the following services will be available:
 
 - `GET /swaps/:itemId` - Render swap request form
 - `POST /swaps/:itemId` - Create new swap request
-- `GET /swaps/:swapRequestId` - Get swap details
 - `GET /swaps/incoming` - Get incoming requests
 - `GET /swaps/outgoing` - Get outgoing requests
 - `PUT /swaps/:swapRequestId/accept` - Accept swap request
 - `PUT /swaps/:swapRequestId/reject` - Reject swap request
-- `PUT /swaps/:swapRequestId/cancel` - Delete swap request
+- `PUT /swaps/:swapRequestId/cancel` - Cancel swap request
 
 ### Messages (not yet implemented)
 
@@ -269,7 +269,7 @@ erDiagram
         String message "Required"
         String imageUrl "Optional"
         String ownerId FK "Required"
-        String status "pending/accepted/rejected/cancelled"
+        String status "pending/accepted/rejected/cancelled, Default: pending"
         Date createdAt "Required, Auto-generated"
         Date acceptedAt "Optional"
         Date rejectedAt "Optional"
@@ -358,11 +358,11 @@ The **Logs** collection tracks system activities and user actions for auditing.
    - Each user can own multiple items
    - Each item belongs to exactly one user
 
-2. **User → SwapRequests**: One-to-Many
+2. **User → SwapRequest**: One-to-Many
    - Each user can create multiple swap requests
    - Each swap request is created by exactly one user
 
-3. **Item → SwapRequests**: One-to-Many (Two relationships)
+3. **Item → SwapRequest**: One-to-Many (Two relationships)
    - Each item can be the target of multiple swap requests
    - Each item can be offered in multiple swap requests
    - Each swap request targets exactly one item and offers exactly one item
@@ -401,7 +401,7 @@ For optimal query performance, the following indexes have been implemented:
   - `status + itemType` - Available items by category
   - `status + createdAt` - Available items chronologically
 
-#### SwapRequests Collection Indexes
+#### SwapRequest Collection Indexes
 
 - **Primary Indexes** (Unique):
   - `swapRequestId` - Primary key (unique)
@@ -575,46 +575,6 @@ sequenceDiagram
     S-->>W: Redirect with confirmation
     W-->>O: Show action result
 ```
-
-### Key Components Explained
-
-#### Authentication Components:
-
-- **Express Routes**: `/register`, `/login`, `/logout`
-- **Middleware**: Session validation on protected routes
-- **Security**: BCrypt password hashing
-- **Session Management**: Express-session with MongoDB store
-- **Models**: `User` model with unique constraints
-- **Validation**: Form validation and duplicate user checks
-
-#### Item Creation Components:
-
-- **Express Routes**: `/items/new`, `/items/:itemId/edit`, `/items/:itemId/image`
-- **Models**: `Item` with embedded image binary data
-- **Views**: `item-new.ejs`, `item-edit.ejs`, `account.ejs`
-- **File Upload**: Multer with memoryStorage() for 10MB limit, image-only filter
-- **Image Storage**: Binary data stored in MongoDB `image.data` field as Buffer
-- **Image Serving**: Dynamic route `/items/:itemId/image` serves from database
-- **Content Type Detection**: Sniffs image headers for proper MIME types
-- **Validation**: Form validation, required fields, category selection
-- **ObjectId Generation**: Unique item identifiers using mongoose ObjectId
-- **Authentication**: Protected routes requiring login session
-- **Cache Control**: No-cache headers for immediate image updates
-
-#### Swap Feature Components:
-
-- **Express Routes**: `/swaps/request/:itemId`, `/swaps/received`, `/swaps/:requestId/respond`
-- **Models**: `SwapRequest`, `Item`, `User`
-- **Views**: `search.ejs`, `swap-request.ejs`, `swap-received.ejs`
-- **File Upload**: Multer middleware for swap offer images
-- **Status Management**: Pending → Accepted/Rejected workflow
-
-#### Database Schema Integration:
-
-- **Users**: `userId` (UUID), `username`, `email`, `password` (hashed)
-- **Items**: `itemId`, `ownerId`, `status`, `hasPendingSwaps`
-- **SwapRequests**: `requesterId`, `itemId`, `offeredItemId`, `status`, `createdAt`
-- **Indexes**: Optimized queries for user lookups and swap status checks
 
 ## License
 
