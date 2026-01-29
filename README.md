@@ -8,8 +8,8 @@ A web-based application that enables users to exchange personal items with other
 - Item posting and management
 - Browse and search items
 - Swap request system
-- User-to-user messaging
-- Admin content moderation
+- User-to-user messaging (not yet developed)
+- Admin content moderation (not yet developed)
 - Responsive web design
 
 ## Prerequisites
@@ -33,7 +33,7 @@ cd home-swap
 npm install
 ```
 
-### Start MongoDB with Mongo Express
+### 3. Start MongoDB with Mongo Express
 
 ```bash
 # Start MongoDB and Mongo Express for development
@@ -43,13 +43,11 @@ docker-compose up -d mongodb mongo-express
 docker-compose --profile test up -d
 ```
 
-### 4. Set up environment variables
+### 4. Set up environment variables (optional)
 
 ```bash
-# Copy the example environment file
-cp .env.example .env
-
-# Edit .env with your configuration if needed
+# Environment variables have default values but can be customized
+# Create a .env file if you need to override defaults
 ```
 
 ### 5. Start the development server
@@ -137,6 +135,14 @@ npm test
 docker-compose --profile test down
 ```
 
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
 ## Project Structure
 
 ```
@@ -175,6 +181,61 @@ When running with Docker Compose, the following services will be available:
 | `MONGODB_TEST_URI` | Test database connection string | `mongodb://admin:password@localhost:27018/homeswap_test?authSource=admin`                |
 | `SESSION_SECRET`   | Session encryption key          | `your-secret-key-here`                                                                   |
 
+## API Endpoints
+
+### Home
+
+- `GET /` - Home page
+
+### Authentication
+
+- `GET /auth/register` - Render registration page
+- `POST /auth/register` - User registration
+- `GET /auth/login` - Render login page
+- `POST /auth/login` - User login
+- `POST /auth/logout` - User logout
+- `GET /auth/me` - Returns the currently logged-in user from session
+
+### Account
+
+- `GET /account` - View profile/account details page
+- `GET /account/edit` - Render account edit page
+- `POST /account` - Update account information
+
+### Search
+
+- `GET /search` - Search and browse items with filtering by query, category, and swap status
+
+### Items
+
+- `POST /items` - Create item
+- `GET /items/new` - Render posting form
+- `GET /items/:itemId` - Get item details
+- `PUT /items/:itemId` - Update item
+- `DELETE /items/:itemId` - Delete item
+- `GET /items/:itemId/image` - Serve item image from MongoDB
+
+### Swap Requests
+
+- `GET /swaps/:itemId` - Render swap request form
+- `POST /swaps/:itemId` - Create new swap request
+- `GET /swaps/incoming` - Get incoming requests
+- `GET /swaps/outgoing` - Get outgoing requests
+- `PUT /swaps/:swapRequestId/accept` - Accept swap request
+- `PUT /swaps/:swapRequestId/reject` - Reject swap request
+- `PUT /swaps/:swapRequestId/cancel` - Cancel swap request
+
+### Messages (not yet implemented)
+
+- `POST /messages` - Send message
+- `GET /messages/conversations` - List conversations
+- `GET /messages/conversation/:userId` - Get conversation
+
+### Admin (not yet implemented)
+
+- `GET /admin/reports` - View reports
+- `PUT /admin/items/:id/moderate` - Moderate content
+
 ## Database Schema
 
 This section provides a visual representation of the Home Swap Platform database schema, showing the four main collections and their relationships.
@@ -208,7 +269,7 @@ erDiagram
         String message "Required"
         String imageUrl "Optional"
         String ownerId FK "Required"
-        String status "pending/accepted/rejected/cancelled"
+        String status "pending/accepted/rejected/cancelled, Default: pending"
         Date createdAt "Required, Auto-generated"
         Date acceptedAt "Optional"
         Date rejectedAt "Optional"
@@ -229,7 +290,7 @@ erDiagram
     User ||--o{ Log : "activity_logged"
 ```
 
-### Collection Descriptions
+### Data Dictionary
 
 #### Users Collection
 
@@ -243,11 +304,7 @@ The **Users** collection stores user account information and authentication data
 - `password`: Hashed password using bcrypt (String, Required)
 - `userrole`: User role/type in the system (String, Required)
 
-**Security Features:**
-
-- Passwords are automatically hashed before saving using bcrypt
-- Pre-save and pre-insertMany middleware for password hashing
-- comparePassword method for authentication
+Note that passwords are automatically hashed before saving using bcrypt.
 
 #### Items Collection
 
@@ -259,16 +316,12 @@ The **Items** collection stores information about items available for swapping.
 - `title`: Name/title of the item (String, Required)
 - `description`: Detailed description of the item (String, Required)
 - `imageUrl`: URL to item image (String, Optional)
+- `image`: Binary store of image if it was uploaded (Binary, Optional)
+- `hasImage`: Boolean as to whether the item has an image or not (Boolean, Required)
 - `ownerId`: Reference to the user who owns the item (String, Foreign Key)
 - `itemType`: Category/type of item (String, Optional)
 - `status`: Current availability status - 'available' (default) or 'swapped' (String, Required)
-
-**Status Field Behavior:**
-
-- Items start as 'available' when created
-- When a swap request is accepted, both items are automatically marked as 'swapped'
-- Swapped items are excluded from search results by default
-- Users can optionally include swapped items in search results
+- `createdAt`: Timestamp when request was created (Date, Auto-generated)
 
 #### SwapRequests Collection
 
@@ -305,11 +358,11 @@ The **Logs** collection tracks system activities and user actions for auditing.
    - Each user can own multiple items
    - Each item belongs to exactly one user
 
-2. **User → SwapRequests**: One-to-Many
+2. **User → SwapRequest**: One-to-Many
    - Each user can create multiple swap requests
    - Each swap request is created by exactly one user
 
-3. **Item → SwapRequests**: One-to-Many (Two relationships)
+3. **Item → SwapRequest**: One-to-Many (Two relationships)
    - Each item can be the target of multiple swap requests
    - Each item can be offered in multiple swap requests
    - Each swap request targets exactly one item and offers exactly one item
@@ -317,14 +370,6 @@ The **Logs** collection tracks system activities and user actions for auditing.
 4. **User → Logs**: One-to-Many
    - Each user can have multiple log entries
    - Each log entry may be associated with one user (optional for system logs)
-
-### Data Types & Constraints
-
-- **String**: Text data with MongoDB ObjectId support
-- **Date**: ISO date format with automatic timestamp generation
-- **Required**: Field must be present when creating documents
-- **Unique**: Field values must be unique across the collection
-- **Optional**: Field may be omitted during document creation
 
 ### Database Indexes
 
@@ -356,7 +401,7 @@ For optimal query performance, the following indexes have been implemented:
   - `status + itemType` - Available items by category
   - `status + createdAt` - Available items chronologically
 
-#### SwapRequests Collection Indexes
+#### SwapRequest Collection Indexes
 
 - **Primary Indexes** (Unique):
   - `swapRequestId` - Primary key (unique)
@@ -376,29 +421,6 @@ For optimal query performance, the following indexes have been implemented:
 - **Compound Indexes**:
   - `userId + timestamp` - User's chronological activity
   - `action + timestamp` - Action-based chronological queries
-
-#### Index Benefits
-
-These indexes provide significant performance improvements for:
-
-- ✅ User dashboard loading (own items, swap requests)
-- ✅ Search and filtering operations
-- ✅ Admin queries and reporting
-- ✅ Activity logging and monitoring
-- ✅ Swap request management
-- ✅ Authentication and user lookup
-- ✅ Category-based item browsing
-
-### Sample Data Flow
-
-1. **User Registration**: New user document created in Users collection
-2. **Item Listing**: User creates item document in Items collection with ownerId reference and status 'available'
-3. **Swap Request**: Another user creates swap request document in SwapRequests collection referencing both target itemId and their own offered itemId
-4. **Request Processing**: Item owner can accept/reject the swap request, updating the status field
-   - **If Accepted**: Both items' status is updated to 'swapped', making them unavailable for new requests
-   - **If Rejected**: Items remain 'available' for other swap opportunities
-5. **Search Filtering**: Search results exclude 'swapped' items by default, with option to include them
-6. **Activity Logging**: All actions are logged in Logs collection with appropriate userId references
 
 ## User Flows
 
@@ -553,89 +575,6 @@ sequenceDiagram
     S-->>W: Redirect with confirmation
     W-->>O: Show action result
 ```
-
-### Key Components Explained
-
-#### Authentication Components:
-
-- **Express Routes**: `/register`, `/login`, `/logout`
-- **Middleware**: Session validation on protected routes
-- **Security**: BCrypt password hashing
-- **Session Management**: Express-session with MongoDB store
-- **Models**: `User` model with unique constraints
-- **Validation**: Form validation and duplicate user checks
-
-#### Item Creation Components:
-
-- **Express Routes**: `/items/new`, `/items/:itemId/edit`, `/items/:itemId/image`
-- **Models**: `Item` with embedded image binary data
-- **Views**: `item-new.ejs`, `item-edit.ejs`, `account.ejs`
-- **File Upload**: Multer with memoryStorage() for 10MB limit, image-only filter
-- **Image Storage**: Binary data stored in MongoDB `image.data` field as Buffer
-- **Image Serving**: Dynamic route `/items/:itemId/image` serves from database
-- **Content Type Detection**: Sniffs image headers for proper MIME types
-- **Validation**: Form validation, required fields, category selection
-- **ObjectId Generation**: Unique item identifiers using mongoose ObjectId
-- **Authentication**: Protected routes requiring login session
-- **Cache Control**: No-cache headers for immediate image updates
-
-#### Swap Feature Components:
-
-- **Express Routes**: `/swaps/request/:itemId`, `/swaps/received`, `/swaps/:requestId/respond`
-- **Models**: `SwapRequest`, `Item`, `User`
-- **Views**: `search.ejs`, `swap-request.ejs`, `swap-received.ejs`
-- **File Upload**: Multer middleware for swap offer images
-- **Status Management**: Pending → Accepted/Rejected workflow
-
-#### Database Schema Integration:
-
-- **Users**: `userId` (UUID), `username`, `email`, `password` (hashed)
-- **Items**: `itemId`, `ownerId`, `status`, `hasPendingSwaps`
-- **SwapRequests**: `requesterId`, `itemId`, `offeredItemId`, `status`, `createdAt`
-- **Indexes**: Optimized queries for user lookups and swap status checks
-
-## API Endpoints
-
-### Authentication
-
-- `POST /auth/register` - User registration
-- `POST /auth/login` - User login
-- `POST /auth/logout` - User logout
-
-### Items
-
-- `GET /items` - Browse items
-- `POST /items` - Create item
-- `GET /items/:id` - Get item details
-- `PUT /items/:id` - Update item
-- `DELETE /items/:id` - Delete item
-
-### Swap Requests
-
-- `POST /swaps` - Create swap request
-- `GET /swaps/incoming` - Get incoming requests
-- `GET /swaps/outgoing` - Get outgoing requests
-- `PUT /swaps/:id/accept` - Accept swap request
-- `PUT /swaps/:id/reject` - Reject swap request
-
-### Messages
-
-- `POST /messages` - Send message
-- `GET /messages/conversations` - List conversations
-- `GET /messages/conversation/:userId` - Get conversation
-
-### Admin
-
-- `GET /admin/reports` - View reports
-- `PUT /admin/items/:id/moderate` - Moderate content
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ## License
 

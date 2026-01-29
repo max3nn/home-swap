@@ -149,8 +149,8 @@ router.get('/new', (req, res) => {
   });
 });
 
-// POST /items/new - Create a new item
-router.post('/new', upload.single('image'), async (req, res, next) => {
+// POST /items - Create a new item
+router.post('/', upload.single('image'), async (req, res, next) => {
   try {
     if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
       return res.status(503).render('error', {
@@ -273,8 +273,8 @@ router.get('/:itemId/edit', async (req, res, next) => {
   }
 });
 
-// POST /items/:itemId/edit - Update an item
-router.post('/:itemId/edit', upload.single('image'), async (req, res, next) => {
+// PUT /items/:itemId - Update an item
+router.put('/:itemId', upload.single('image'), async (req, res, next) => {
   try {
     if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
       return res.status(503).render('error', {
@@ -347,21 +347,21 @@ router.post('/:itemId/edit', upload.single('image'), async (req, res, next) => {
     item.description = description;
     item.itemType = itemType || undefined;
     item.wantedCategories = wantedCategories;
-    
+
     // Update image if a new one was uploaded
     if (req.file && req.file.buffer) {
       // Ensure image object exists
       if (!item.image) {
         item.image = {};
       }
-      
+
       // Set nested fields directly
       item.image.data = req.file.buffer;
       item.image.contentType = req.file.mimetype || 'application/octet-stream';
       item.hasImage = true;
       // Add timestamp to imageUrl to force browser cache refresh
       item.imageUrl = `/items/${itemId}/image?v=${Date.now()}`;
-      
+
       // Mark the entire image object as modified
       item.markModified('image');
     }
@@ -377,8 +377,8 @@ router.post('/:itemId/edit', upload.single('image'), async (req, res, next) => {
   }
 });
 
-// POST /items/:itemId/delete - Delete an item
-router.post('/:itemId/delete', async (req, res, next) => {
+// DELETE /items/:itemId - Delete an item
+router.delete('/:itemId', async (req, res, next) => {
   try {
     if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
       return res.status(503).render('error', {
@@ -435,7 +435,7 @@ router.use(async (err, req, res, next) => {
     const isEditRoute = req.path.includes('/edit');
     const viewName = isEditRoute ? 'item-edit' : 'item-new';
     const title = isEditRoute ? 'Edit Item' : 'Post Item';
-    
+
     let item = null;
     if (isEditRoute && req.params.itemId) {
       try {
@@ -448,7 +448,7 @@ router.use(async (err, req, res, next) => {
     const renderData = {
       title,
       categories: ITEM_CATEGORIES,
-      errors: err.code === 'LIMIT_FILE_SIZE' 
+      errors: err.code === 'LIMIT_FILE_SIZE'
         ? ['Image file is too large (max 10MB). Please choose a smaller image.']
         : ['Upload failed. Please try again.'],
       values: {
