@@ -137,6 +137,14 @@ npm test
 docker-compose --profile test down
 ```
 
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
 ## Project Structure
 
 ```
@@ -174,6 +182,48 @@ When running with Docker Compose, the following services will be available:
 | `MONGODB_URI`      | MongoDB connection string       | `mongodb://homeswap_user:homeswap_password@localhost:27017/homeswap?authSource=homeswap` |
 | `MONGODB_TEST_URI` | Test database connection string | `mongodb://admin:password@localhost:27018/homeswap_test?authSource=admin`                |
 | `SESSION_SECRET`   | Session encryption key          | `your-secret-key-here`                                                                   |
+
+## API Endpoints
+
+### Authentication
+
+- `GET /auth/register` - Render registration page
+- `POST /auth/register` - User registration
+- `POST /auth/login` - User login
+- `POST /auth/logout` - User logout
+- `GET /auth/me` - Returns the currently logged-in user from session
+
+### Items
+
+- `GET /items` - Browse items
+- `POST /items` - Create item
+- `GET /items/new` - Render posting form
+- `GET /items/:itemid` - Get item details
+- `PUT /items/:itemid` - Update item
+- `DELETE /items/:itemid` - Delete item
+- `GET /items/:itemId/image` - Serve item image from MongoDB
+
+### Swap Requests
+
+- `GET /swaps/:itemId` - Render swap request form
+- `POST /swaps/:itemId` - Create new swap request
+- `GET /swaps/:swapRequestId` - Get swap details
+- `GET /swaps/incoming` - Get incoming requests
+- `GET /swaps/outgoing` - Get outgoing requests
+- `PUT /swaps/:swapRequestId/accept` - Accept swap request
+- `PUT /swaps/:swapRequestId/reject` - Reject swap request
+- `PUT /swaps/:swapRequestId/cancel` - Delete swap request
+
+### Messages (not yet implemented)
+
+- `POST /messages` - Send message
+- `GET /messages/conversations` - List conversations
+- `GET /messages/conversation/:userId` - Get conversation
+
+### Admin (not yet implemented)
+
+- `GET /admin/reports` - View reports
+- `PUT /admin/items/:id/moderate` - Moderate content
 
 ## Database Schema
 
@@ -357,17 +407,6 @@ For optimal query performance, the following indexes have been implemented:
 - **Compound Indexes**:
   - `userId + timestamp` - User's chronological activity
   - `action + timestamp` - Action-based chronological queries
-
-### Sample Data Flow
-
-1. **User Registration**: New user document created in Users collection
-2. **Item Listing**: User creates item document in Items collection with ownerId reference and status 'available'
-3. **Swap Request**: Another user creates swap request document in SwapRequests collection referencing both target itemId and their own offered itemId
-4. **Request Processing**: Item owner can accept/reject the swap request, updating the status field
-   - **If Accepted**: Both items' status is updated to 'swapped', making them unavailable for new requests
-   - **If Rejected**: Items remain 'available' for other swap opportunities
-5. **Search Filtering**: Search results exclude 'swapped' items by default, with option to include them
-6. **Activity Logging**: All actions are logged in Logs collection with appropriate userId references
 
 ## User Flows
 
@@ -562,49 +601,6 @@ sequenceDiagram
 - **Items**: `itemId`, `ownerId`, `status`, `hasPendingSwaps`
 - **SwapRequests**: `requesterId`, `itemId`, `offeredItemId`, `status`, `createdAt`
 - **Indexes**: Optimized queries for user lookups and swap status checks
-
-## API Endpoints
-
-### Authentication
-
-- `POST /auth/register` - User registration
-- `POST /auth/login` - User login
-- `POST /auth/logout` - User logout
-
-### Items
-
-- `GET /items` - Browse items
-- `POST /items` - Create item
-- `GET /items/:id` - Get item details
-- `PUT /items/:id` - Update item
-- `DELETE /items/:id` - Delete item
-
-### Swap Requests
-
-- `POST /swaps` - Create swap request
-- `GET /swaps/incoming` - Get incoming requests
-- `GET /swaps/outgoing` - Get outgoing requests
-- `PUT /swaps/:id/accept` - Accept swap request
-- `PUT /swaps/:id/reject` - Reject swap request
-
-### Messages
-
-- `POST /messages` - Send message
-- `GET /messages/conversations` - List conversations
-- `GET /messages/conversation/:userId` - Get conversation
-
-### Admin
-
-- `GET /admin/reports` - View reports
-- `PUT /admin/items/:id/moderate` - Moderate content
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ## License
 
