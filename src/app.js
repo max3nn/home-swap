@@ -3,6 +3,7 @@ const path = require('path');
 const expressLayouts = require('express-ejs-layouts');
 const session = require('express-session');
 const connectDB = require('./config/database');
+const Item = require('./models/Item');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +31,7 @@ app.use(session({
 
 // Middleware to make session data available to all views
 app.use((req, res, next) => {
+  res.locals.currentPage = req.path;
   res.locals.user = req.session.user || null;
   res.locals.success = req.session.success || null;
   if (req.session.success) {
@@ -44,8 +46,25 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Basic route
-app.get('/', (req, res) => {
-  res.render('home', { title: 'Home Swap Platform' });
+app.get('/', async (req, res) => {
+  try {
+    // Fetch a sample of available items with images (limit 6 for display)
+    const sampleItems = await Item.find({ status: 'available' })
+      .select('itemId title description imageUrl hasImage itemType')
+      .limit(6)
+      .sort({ createdAt: -1 }); // Get most recent items
+
+    res.render('home', {
+      title: 'Home Swap Platform',
+      sampleItems: sampleItems
+    });
+  } catch (error) {
+    console.error('Error fetching sample items:', error);
+    res.render('home', {
+      title: 'Home Swap Platform',
+      sampleItems: []
+    });
+  }
 });
 
 // Auth routes

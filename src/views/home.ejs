@@ -14,32 +14,71 @@
     </div>
 </section>
 
-<!-- Stats Section -->
-<section class="stats-section">
+<!-- Sample Items Section -->
+<section id="sample-items" class="sample-items-section">
     <div class="container">
-        <div class="row">
-            <div class="col s12 m4">
-                <div class="stat-card">
-                    <div class="stat-number">10,000+</div>
-                    <div class="stat-label">Active Users</div>
-                    <p class="stat-description">Growing community of swappers</p>
-                </div>
-            </div>
-            <div class="col s12 m4">
-                <div class="stat-card">
-                    <div class="stat-number">25,000+</div>
-                    <div class="stat-label">Items Swapped</div>
-                    <p class="stat-description">Successful exchanges made</p>
-                </div>
-            </div>
-            <div class="col s12 m4">
-                <div class="stat-card">
-                    <div class="stat-number">98%</div>
-                    <div class="stat-label">Satisfaction Rate</div>
-                    <p class="stat-description">Happy community members</p>
-                </div>
-            </div>
+        <div class="center">
+            <h2 class="section-title">Available Items</h2>
+            <p class="section-subtitle">See what your neighbors are offering to swap</p>
         </div>
+        <% if (sampleItems && sampleItems.length > 0) { %>
+        <div class="row">
+            <% sampleItems.forEach(item => { %>
+            <div class="col s12 m6 l4">
+                <div class="item-preview-card">
+                    <div class="item-image-container">
+                        <% if (item.hasImage && item.imageUrl) { %>
+                        <img src="<%= item.imageUrl %>" alt="<%= item.title %>" class="item-preview-image">
+                        <% } else { %>
+                        <div class="item-placeholder">
+                            <i class="material-icons">inventory_2</i>
+                        </div>
+                        <% } %>
+                        <% if (item.itemType) { %>
+                        <span class="item-type-badge"><%= item.itemType %></span>
+                        <% } %>
+                    </div>
+                    <div class="item-preview-content">
+                        <h6 class="item-preview-title"><%= item.title %></h6>
+                        <p class="item-preview-description">
+                            <%= item.description.length > 100 ? item.description.substring(0, 97) + '...' : item.description %>
+                        </p>
+                        <% if (!user) { %>
+                        <a href="/auth/register" class="btn-small waves-effect waves-light">
+                            <i class="material-icons left">person_add</i>
+                            Sign Up to Swap
+                        </a>
+                        <% } else { %>
+                        <a href="/items/<%= item.itemId %>" class="btn-small waves-effect waves-light">
+                            <i class="material-icons left">visibility</i>
+                            View Details
+                        </a>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+        </div>
+        <div class="center" style="margin-top: 32px;">
+            <% if (!user) { %>
+            <a href="/auth/register" class="btn-secondary waves-effect waves-light">
+                Sign Up to Browse All Items
+                <i class="material-icons right">arrow_forward</i>
+            </a>
+            <% } else { %>
+            <a href="/search" class="btn-secondary waves-effect waves-light">
+                Browse All Items
+                <i class="material-icons right">search</i>
+            </a>
+            <% } %>
+        </div>
+        <% } else { %>
+        <div class="center" style="padding: 60px 0;">
+            <i class="material-icons" style="font-size: 4rem; color: #9e9e9e;">inventory_2</i>
+            <h5 style="color: #9e9e9e; margin-top: 20px;">No items available right now</h5>
+            <p style="color: #9e9e9e;">Check back soon to see what the community is sharing!</p>
+        </div>
+        <% } %>
     </div>
 </section>
 
