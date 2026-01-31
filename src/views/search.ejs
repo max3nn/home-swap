@@ -95,7 +95,7 @@
           <% } else { %>
             <% items.forEach(function(item) { %>
               <div class="col s12 m6 l4" style="margin-bottom: 18px;">
-                <div style="height: 400px; background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.04); display: flex; flex-direction: column;">
+                <div style="height: 480px; background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.04); display: flex; flex-direction: column;">
                   <div style="height: 180px; background-color: hsl(var(--muted)); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink: 0; position: relative;">
                     <% if (item.imageUrl) { %>
                       <img src="<%= item.imageUrl %>" alt="<%= item.title %>" style="width: 100%; height: 100%; object-fit: cover;" />
@@ -161,8 +161,11 @@
                           <a href="/items/<%= item.itemId %>/edit" class="btn-primary waves-effect waves-light" style="white-space: nowrap; font-size: 0.85rem; padding: 0 16px; height: 32px; line-height: 32px;">
                             Edit
                           </a>
+                          <a href="#delete-modal-<%= item.itemId %>" class="btn waves-effect waves-light modal-trigger" style="white-space: nowrap; font-size: 0.85rem; padding: 0 12px; height: 32px; line-height: 32px; background-color: #dc2626; color: white;">
+                            <i class="material-icons" style="font-size: 16px;">delete</i>
+                          </a>
                         <% } else if (user && item.status !== 'swapped') { %>
-                          <a href="/swaps/request/<%= item.itemId %>" class="btn-secondary waves-effect waves-light" style="white-space: nowrap; font-size: 0.85rem; padding: 0 16px; height: 32px; line-height: 32px;">
+                          <a href="/swaps/<%= item.itemId %>" class="btn-secondary waves-effect waves-light" style="white-space: nowrap; font-size: 0.85rem; padding: 0 16px; height: 32px; line-height: 32px;">
                             Request Swap
                           </a>
                         <% } else if (user && item.status === 'swapped') { %>
@@ -188,11 +191,47 @@
   </div>
 </section>
 
+<!-- Delete Confirmation Modals -->
+<% if (items && items.length > 0) { %>
+  <% items.forEach(function(item) { %>
+    <% if (user && user.userId === item.ownerId) { %>
+      <div id="delete-modal-<%= item.itemId %>" class="modal" style="border-radius: var(--radius); max-width: 500px;">
+        <div class="modal-content" style="padding: 24px;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <i class="material-icons" style="color: #dc2626; font-size: 28px;">warning</i>
+            <h4 style="margin: 0; color: hsl(var(--foreground)); font-weight: 700;">Delete Item</h4>
+          </div>
+          <p style="color: hsl(var(--muted-foreground)); margin: 0 0 20px; line-height: 1.5;">
+            Are you sure you want to delete "<strong><%= item.title %></strong>"? This action cannot be undone.
+          </p>
+        </div>
+        <div class="modal-footer" style="background-color: hsl(var(--muted)); padding: 16px 24px;">
+          <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <a href="#!" class="modal-close btn-flat waves-effect waves-light" style="color: hsl(var(--muted-foreground));">Cancel</a>
+            <form method="POST" action="/items/<%= item.itemId %>?_method=DELETE" style="display: inline;">
+              <button type="submit" class="btn waves-effect waves-light" style="background-color: #dc2626; color: white; border-radius: 999px;">
+                <i class="material-icons left">delete</i>
+                DELETE ITEM
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  <% }); %>
+<% } %>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const selects = document.querySelectorAll('select');
     if (window.M && selects && selects.length) {
       M.FormSelect.init(selects);
+    }
+    
+    // Initialize modals
+    const modals = document.querySelectorAll('.modal');
+    if (window.M && modals.length) {
+      M.Modal.init(modals);
     }
   });
 </script>

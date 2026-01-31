@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const User = require('../models/User');
+const Item = require('../models/Item');
 
 const router = express.Router();
 
@@ -24,9 +25,13 @@ router.get('/', async (req, res, next) => {
       });
     }
 
+    // Get user's items
+    const userItems = await Item.find({ ownerId: user.userId }).sort({ createdAt: -1 }).lean();
+
     return res.render('account', {
       title: 'My Account',
       profile: user,
+      userItems: userItems,
     });
   } catch (err) {
     return next(err);

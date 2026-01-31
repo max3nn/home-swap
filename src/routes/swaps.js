@@ -30,8 +30,153 @@ router.use((req, res, next) => {
     next();
 });
 
-// GET /swaps/request/:itemId - Show swap request form
-router.get('/request/:itemId', async (req, res, next) => {
+// GET /swaps/outgoing - Show user's outgoing swap requests
+router.get('/outgoing', async (req, res, next) => {
+    try {
+        if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+            return res.status(503).render('error', {
+                title: 'Service Unavailable',
+                message: 'Database connection unavailable. Please try again later.',
+                error: {},
+            });
+        }
+
+        // Get user's swap requests
+        const swapRequests = await SwapRequest.find({
+            ownerId: req.session.user.userId
+        }).lean();
+
+        // If no swap requests, render empty page
+        if (swapRequests.length === 0) {
+            return res.render('swap-my-requests', {
+                title: 'My Swap Requests',
+                swapRequests: []
+            });
+        }
+
+        // Get associated items for each request
+        const itemIds = [...new Set([
+            ...swapRequests.map(req => req.itemId),
+            ...swapRequests.map(req => req.offeredItemId)
+        ])];
+
+        const items = await Item.find({ itemId: { $in: itemIds } }).lean();
+        const itemsMap = items.reduce((acc, item) => {
+            acc[item.itemId] = item;
+            return acc;
+        }, {});
+
+        // Get owner information for all items
+        const ownerIds = [...new Set(items.map(item => item.ownerId))];
+        const User = require('../models/User');
+        const owners = await User.find({ userId: { $in: ownerIds } }, { username: 1, userId: 1 }).lean();
+        const ownerMap = owners.reduce((map, owner) => {
+            map[owner.userId] = owner.username;
+            return map;
+        }, {});
+
+        // Enrich swap requests with item data and owner names, filtering out requests with missing items
+        const enrichedRequests = swapRequests
+            .filter(request => itemsMap[request.itemId] && itemsMap[request.offeredItemId])
+            .map(request => ({
+                ...request,
+                targetItem: {
+                    ...itemsMap[request.itemId],
+                    ownerName: ownerMap[itemsMap[request.itemId]?.ownerId] || 'Unknown User'
+                },
+                offeredItem: {
+                    ...itemsMap[request.offeredItemId],
+                    ownerName: ownerMap[itemsMap[request.offeredItemId]?.ownerId] || 'Unknown User'
+                }
+            }));
+
+        res.render('swap-my-requests', {
+            title: 'My Swap Requests',
+            swapRequests: enrichedRequests
+        });
+    } catch (err) {
+        return next(err);
+    }
+});
+
+// GET /swaps/incoming - Show swap requests received by user
+router.get('/incoming', async (req, res, next) => {
+    try {
+        if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+            return res.status(503).render('error', {
+                title: 'Service Unavailable',
+                message: 'Database connection unavailable. Please try again later.',
+                error: {},
+            });
+        }
+
+        // First get user's items to find relevant swap requests
+        const userItems = await Item.find({ ownerId: req.session.user.userId }).lean();
+        const userItemIds = userItems.map(item => item.itemId);
+
+        // If user has no items, they can't receive swap requests
+        if (userItemIds.length === 0) {
+            return res.render('swap-received', {
+                title: 'Received Swap Requests',
+                swapRequests: []
+            });
+        }
+
+        // Get swap requests for user's items
+        const swapRequests = await SwapRequest.find({
+            itemId: { $in: userItemIds }
+        }).lean();
+
+        // If no swap requests, render empty page
+        if (swapRequests.length === 0) {
+            return res.render('swap-received', {
+                title: 'Received Swap Requests',
+                swapRequests: []
+            });
+        }
+
+        // Get associated items and users for each request
+        const itemIds = [...new Set([
+            ...swapRequests.map(req => req.itemId),
+            ...swapRequests.map(req => req.offeredItemId)
+        ])];
+
+        const userIds = [...new Set(swapRequests.map(req => req.ownerId))];
+
+        const items = await Item.find({ itemId: { $in: itemIds } }).lean();
+        const users = await User.find({ userId: { $in: userIds } }, { password: 0 }).lean();
+
+        const itemsMap = items.reduce((acc, item) => {
+            acc[item.itemId] = item;
+            return acc;
+        }, {});
+
+        const usersMap = users.reduce((acc, user) => {
+            acc[user.userId] = user;
+            return acc;
+        }, {});
+
+        // Enrich swap requests with item and user data, filtering out requests with missing data
+        const enrichedRequests = swapRequests
+            .filter(request => itemsMap[request.itemId] && itemsMap[request.offeredItemId] && usersMap[request.ownerId])
+            .map(request => ({
+                ...request,
+                targetItem: itemsMap[request.itemId],
+                offeredItem: itemsMap[request.offeredItemId],
+                requester: usersMap[request.ownerId]
+            }));
+
+        res.render('swap-received', {
+            title: 'Received Swap Requests',
+            swapRequests: enrichedRequests
+        });
+    } catch (err) {
+        return next(err);
+    }
+});
+
+// GET /swaps/:itemId - Show swap request form
+router.get('/:itemId', async (req, res, next) => {
     try {
         const { itemId } = req.params;
 
@@ -95,8 +240,8 @@ router.get('/request/:itemId', async (req, res, next) => {
     }
 });
 
-// POST /swaps/request/:itemId - Process swap request
-router.post('/request/:itemId', upload.single('image'), async (req, res, next) => {
+// POST /swaps/:itemId - Process swap request
+router.post('/:itemId', upload.single('image'), async (req, res, next) => {
     try {
         const { itemId } = req.params;
         const { offeredItemId, message, createNewItem, title, description, itemType, imageUrl } = req.body;
@@ -231,125 +376,8 @@ router.post('/request/:itemId', upload.single('image'), async (req, res, next) =
     }
 });
 
-// GET /swaps/my-requests - Show user's outgoing swap requests
-router.get('/my-requests', async (req, res, next) => {
-    try {
-        if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
-            return res.status(503).render('error', {
-                title: 'Service Unavailable',
-                message: 'Database connection unavailable. Please try again later.',
-                error: {},
-            });
-        }
-
-        // Get user's swap requests
-        const swapRequests = await SwapRequest.find({
-            ownerId: req.session.user.userId
-        }).lean();
-
-        // Get associated items for each request
-        const itemIds = [...new Set([
-            ...swapRequests.map(req => req.itemId),
-            ...swapRequests.map(req => req.offeredItemId)
-        ])];
-
-        const items = await Item.find({ itemId: { $in: itemIds } }).lean();
-        const itemsMap = items.reduce((acc, item) => {
-            acc[item.itemId] = item;
-            return acc;
-        }, {});
-
-        // Get owner information for all items
-        const ownerIds = [...new Set(items.map(item => item.ownerId))];
-        const User = require('../models/User');
-        const owners = await User.find({ userId: { $in: ownerIds } }, { username: 1, userId: 1 }).lean();
-        const ownerMap = owners.reduce((map, owner) => {
-            map[owner.userId] = owner.username;
-            return map;
-        }, {});
-
-        // Enrich swap requests with item data and owner names
-        const enrichedRequests = swapRequests.map(request => ({
-            ...request,
-            targetItem: {
-                ...itemsMap[request.itemId],
-                ownerName: ownerMap[itemsMap[request.itemId]?.ownerId] || 'Unknown User'
-            },
-            offeredItem: {
-                ...itemsMap[request.offeredItemId],
-                ownerName: ownerMap[itemsMap[request.offeredItemId]?.ownerId] || 'Unknown User'
-            }
-        }));
-
-        res.render('swap-my-requests', {
-            title: 'My Swap Requests',
-            swapRequests: enrichedRequests
-        });
-    } catch (err) {
-        return next(err);
-    }
-});
-
-// GET /swaps/received - Show swap requests received by user
-router.get('/received', async (req, res, next) => {
-    try {
-        if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
-            return res.status(503).render('error', {
-                title: 'Service Unavailable',
-                message: 'Database connection unavailable. Please try again later.',
-                error: {},
-            });
-        }
-
-        // First get user's items to find relevant swap requests
-        const userItems = await Item.find({ ownerId: req.session.user.userId }).lean();
-        const userItemIds = userItems.map(item => item.itemId);
-
-        // Get swap requests for user's items
-        const swapRequests = await SwapRequest.find({
-            itemId: { $in: userItemIds }
-        }).lean();
-
-        // Get associated items and users for each request
-        const itemIds = [...new Set([
-            ...swapRequests.map(req => req.itemId),
-            ...swapRequests.map(req => req.offeredItemId)
-        ])];
-
-        const userIds = [...new Set(swapRequests.map(req => req.ownerId))];
-
-        const items = await Item.find({ itemId: { $in: itemIds } }).lean();
-        const users = await User.find({ userId: { $in: userIds } }, { password: 0 }).lean();
-
-        const itemsMap = items.reduce((acc, item) => {
-            acc[item.itemId] = item;
-            return acc;
-        }, {});
-
-        const usersMap = users.reduce((acc, user) => {
-            acc[user.userId] = user;
-            return acc;
-        }, {});
-
-        // Enrich swap requests with item and user data
-        const enrichedRequests = swapRequests.map(request => ({
-            ...request,
-            targetItem: itemsMap[request.itemId],
-            offeredItem: itemsMap[request.offeredItemId],
-            requester: usersMap[request.ownerId]
-        }));
-
-        res.render('swap-received', {
-            title: 'Received Swap Requests',
-            swapRequests: enrichedRequests
-        });
-    } catch (err) {
-        return next(err);
-    }
-});
-
-// POST /swaps/:swapRequestId/accept - Accept a swap request
-router.post('/:swapRequestId/accept', async (req, res, next) => {
+// PUT /swaps/:swapRequestId/accept - Accept a swap request
+router.put('/:swapRequestId/accept', async (req, res, next) => {
     try {
         const { swapRequestId } = req.params;
 
@@ -399,14 +427,14 @@ router.post('/:swapRequestId/accept', async (req, res, next) => {
         }
 
         req.session.success = 'Swap request accepted successfully!';
-        res.redirect('/swaps/received');
+        res.redirect('/swaps/incoming');
     } catch (err) {
         return next(err);
     }
 });
 
-// POST /swaps/:swapRequestId/reject - Reject a swap request
-router.post('/:swapRequestId/reject', async (req, res, next) => {
+// PUT /swaps/:swapRequestId/reject - Reject a swap request
+router.put('/:swapRequestId/reject', async (req, res, next) => {
     try {
         const { swapRequestId } = req.params;
 
@@ -447,14 +475,14 @@ router.post('/:swapRequestId/reject', async (req, res, next) => {
         );
 
         req.session.success = 'Swap request rejected.';
-        res.redirect('/swaps/received');
+        res.redirect('/swaps/incoming');
     } catch (err) {
         return next(err);
     }
 });
 
-// POST /swaps/:swapRequestId/cancel - Cancel a swap request (by requester)
-router.post('/:swapRequestId/cancel', async (req, res, next) => {
+// PUT /swaps/:swapRequestId/cancel - Cancel a swap request (by requester)
+router.put('/:swapRequestId/cancel', async (req, res, next) => {
     try {
         const { swapRequestId } = req.params;
 
@@ -503,7 +531,7 @@ router.post('/:swapRequestId/cancel', async (req, res, next) => {
         );
 
         req.session.success = 'Swap request cancelled successfully.';
-        res.redirect('/swaps/my-requests');
+        res.redirect('/swaps/outgoing');
     } catch (err) {
         return next(err);
     }
