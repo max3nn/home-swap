@@ -67,8 +67,8 @@ describe('Auth - Login', () => {
     });
 
     // And GET /auth/login should redirect because session user exists
-      const loginPageRes = await agent.get('/auth/login').expect(302);
-      expect(loginPageRes.headers.location).toBe('/search');
+    const loginPageRes = await agent.get('/auth/login').expect(302);
+    expect(loginPageRes.headers.location).toBe('/search');
   });
 
   test('invalid credentials return an error and do not create a session', async () => {
@@ -117,5 +117,205 @@ describe('Auth - Login', () => {
       success: false,
       message: 'Please provide email and password',
     });
+  });
+});
+
+describe('Auth - Registration', () => {
+  beforeEach(() => {
+    User.findOne.mockReset();
+  });
+
+
+  test('should prevent duplicate email registration', async () => {
+    const existingUser = {
+      userId: 'u-123',
+      username: 'existinguser',
+      email: 'test@example.com',
+      userrole: 'user'
+    };
+
+    User.findOne.mockResolvedValue(existingUser);
+
+    const res = await request(app)
+      .post('/auth/register')
+      .send({
+        name: 'newuser',
+        email: 'test@example.com',
+        password: 'password123'
+      })
+      .set('Content-Type', 'application/json')
+      .expect(409);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe('User with this email or username already exists');
+  });
+
+  test('should prevent duplicate username registration', async () => {
+    // The route uses $or query to check both email and username
+    User.findOne.mockResolvedValue({ username: 'testuser', email: 'other@example.com' });
+
+    const res = await request(app)
+      .post('/auth/register')
+      .send({
+        name: 'testuser',
+        email: 'newemail@example.com',
+        password: 'password123'
+      })
+      .set('Content-Type', 'application/json')
+      .expect(409);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe('User with this email or username already exists');
+  });
+
+  test('should validate required fields', async () => {
+    const res = await request(app)
+      .post('/auth/register')
+      .send({
+        name: '',
+        email: 'test@example.com'
+        // password missing
+      })
+      .set('Content-Type', 'application/json')
+      .expect(400);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toContain('provide name, email, and password');
+  });
+
+  test('should validate email format', async () => {
+    const res = await request(app)
+      .post('/auth/register')
+      .send({
+        name: 'testuser',
+        email: 'invalid-email',
+        password: 'password123'
+      })
+      .set('Content-Type', 'application/json')
+      .expect(400);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toContain('valid email address');
+  });
+});
+
+describe('Auth - Session Management', () => {
+  beforeEach(() => {
+    User.findOne.mockReset();
+  });
+
+  test('should maintain user session after login', async () => {
+    const agent = request.agent(app);
+    const mockUser = {
+      userId: 'u-123',
+      username: 'testuser',
+      email: 'test@example.com',
+      userrole: 'user',
+      comparePassword: jest.fn().mockResolvedValue(true)
+    };
+
+    User.findOne.mockResolvedValue(mockUser);
+
+    // Login
+    await agent
+      .post('/auth/login')
+      .send({
+        email: 'test@example.com',
+        password: 'correct-password'
+      })
+      .set('Content-Type', 'application/json')
+      .expect(200);
+
+    // Check session is maintained
+    const res = await agent
+      .get('/auth/me')
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.username).toBe('testuser');
+  });
+
+  test('should return 401 for unauthenticated session check', async () => {
+    const res = await request(app)
+      .get('/auth/me')
+      .expect(401);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe('Not authenticated');
+  });
+
+  test('should clear session on logout', async () => {
+    const agent = request.agent(app);
+    const mockUser = {
+      userId: 'u-123',
+      username: 'testuser',
+      email: 'test@example.com',
+      userrole: 'user',
+      comparePassword: jest.fn().mockResolvedValue(true)
+    };
+
+    User.findOne.mockResolvedValue(mockUser);
+
+    // Login first
+    await agent
+      .post('/auth/login')
+      .send({
+        email: 'test@example.com',
+        password: 'correct-password'
+      })
+      .set('Content-Type', 'application/json')
+      .expect(200);
+
+    // Logout
+    await agent
+      .post('/auth/logout')
+      .expect(200);
+
+    // Check session is cleared
+    await agent
+      .get('/auth/me')
+      .expect(401);
+  });
+});
+
+describe('Auth - Security Features', () => {
+  beforeEach(() => {
+    User.findOne.mockReset();
+  });
+
+  test('should not leak user existence information', async () => {
+    User.findOne.mockResolvedValue(null); // User doesn't exist
+
+    const res = await request(app)
+      .post('/auth/login')
+      .send({
+        email: 'nonexistent@example.com',
+        password: 'any-password'
+      })
+      .set('Content-Type', 'application/json')
+      .expect(401);
+
+    // Same error message for non-existent user and wrong password
+    expect(res.body.message).toBe('Invalid email or password');
+  });
+
+  test('should validate input data properly', async () => {
+    // Test various invalid inputs
+    const invalidInputs = [
+      { name: '', email: 'test@example.com', password: 'password123' }, // Empty name
+      { name: 'test', email: 'not-an-email', password: 'password123' }, // Invalid email
+      { name: 'test', email: 'test@example.com', password: '' }, // Empty password
+      { name: 'test', email: 'test@example.com', password: '123' } // Short password
+    ];
+
+    for (const input of invalidInputs) {
+      const res = await request(app)
+        .post('/auth/register')
+        .send(input)
+        .set('Content-Type', 'application/json');
+
+      expect(res.status).toBeGreaterThanOrEqual(400);
+      expect(res.body.success).toBe(false);
+    }
   });
 });
