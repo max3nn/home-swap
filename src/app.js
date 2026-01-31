@@ -81,7 +81,7 @@ app.use('/account', accountRoutes);
 
 // Item routes (requires login in the router)
 const itemRoutes = require('./routes/items');
-app.use('/items', itemRoutes);
+app.use('/items', itemRoutes.router);
 
 // Swap routes (requires login in the router)
 const swapRoutes = require('./routes/swaps');
