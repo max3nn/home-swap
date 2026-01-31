@@ -483,9 +483,15 @@
                 HomeSwap
             </a>
             <ul id="nav-mobile" class="right hide-on-med-and-down">
-                <li><a href="#features">Features</a></li>
-                <li><a href="#how-it-works">How It Works</a></li>
-                <li><a href="#about">About</a></li>
+                <% if (currentPage === '/') { %>
+                    <li><a href="#sample-items">Sample Items</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="#about">About</a></li>
+                <% } %>
+                <% if (currentPage === '/auth/login') { %>
+                    <li><a href="/auth/register">Sign up</a></li>
+                <% } %>
                 <% if (typeof user !== 'undefined' && user) { %>
                     <li><a href="/search">Search</a></li>
                     <li><a href="/items/new">Post Item</a></li>

@@ -31,6 +31,7 @@ app.use(session({
 
 // Middleware to make session data available to all views
 app.use((req, res, next) => {
+  res.locals.currentPage = req.path;
   res.locals.user = req.session.user || null;
   res.locals.success = req.session.success || null;
   if (req.session.success) {
