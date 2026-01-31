@@ -102,8 +102,13 @@
                 <i class="material-icons left">delete</i>
                 DELETE ITEM
               </a>
+            <% } else if (item.status === 'swapped') { %>
+              <button class="btn waves-effect waves-light" disabled style="background-color: hsl(var(--muted)); color: hsl(var(--muted-foreground)); border-radius: 999px; box-shadow: none; opacity: 0.6;">
+                <i class="material-icons left">block</i>
+                Already Swapped
+              </button>
             <% } else { %>
-              <a href="/swaps/request/<%= item.itemId %>" class="btn waves-effect waves-light" style="background-color: hsl(var(--primary)); border-radius: 999px; box-shadow: none;">
+              <a href="/swaps/<%= item.itemId %>" class="btn waves-effect waves-light" style="background-color: hsl(var(--primary)); border-radius: 999px; box-shadow: none;">
                 <i class="material-icons left">swap_horiz</i>
                 Request Swap
               </a>
@@ -182,13 +187,13 @@
                   <!-- Actions -->
                   <% if (request.status === 'pending') { %>
                     <div style="display: flex; gap: 8px;">
-                      <form method="POST" action="/swaps/<%= request.swapRequestId %>/accept" style="display: inline;">
+                      <form method="POST" action="/swaps/<%= request.swapRequestId %>/accept?_method=PUT" style="display: inline;">
                         <button type="submit" class="btn waves-effect waves-light" style="background-color: #28a745; padding: 0 12px; height: 32px; line-height: 32px; font-size: 0.8rem; border-radius: 999px; box-shadow: none;" onclick="return confirm('Accept this swap?')">
                           <i class="material-icons left" style="font-size: 14px;">check</i>
                           Accept
                         </button>
                       </form>
-                      <form method="POST" action="/swaps/<%= request.swapRequestId %>/reject" style="display: inline;">
+                      <form method="POST" action="/swaps/<%= request.swapRequestId %>/reject?_method=PUT" style="display: inline;">
                         <button type="submit" class="btn waves-effect waves-light" style="background-color: #dc3545; padding: 0 12px; height: 32px; line-height: 32px; font-size: 0.8rem; border-radius: 999px; box-shadow: none;" onclick="return confirm('Reject this swap?')">
                           <i class="material-icons left" style="font-size: 14px;">close</i>
                           Reject
@@ -261,7 +266,7 @@
 
                   <% if (request.status === 'pending') { %>
                     <div style="text-align: right;">
-                      <form method="POST" action="/swaps/<%= request.swapRequestId %>/cancel" style="display: inline;" onsubmit="return confirm('Cancel this swap request?')">
+                      <form method="POST" action="/swaps/<%= request.swapRequestId %>/cancel?_method=PUT" style="display: inline;" onsubmit="return confirm('Cancel this swap request?')">
                         <button type="submit" class="btn waves-effect waves-light" style="background-color: #6b7280; padding: 0 12px; height: 32px; line-height: 32px; font-size: 0.8rem; border-radius: 999px; box-shadow: none;">
                           <i class="material-icons left" style="font-size: 14px;">cancel</i>
                           Cancel Request

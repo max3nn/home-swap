@@ -133,7 +133,7 @@
                 </div>
               <% } else if (request.status === 'pending') { %>
                 <div style="margin-top: 16px;">
-                  <form method="POST" action="/swaps/<%= request.swapRequestId %>/cancel" style="display: inline;">
+                  <form method="POST" action="/swaps/<%= request.swapRequestId %>/cancel?_method=PUT" style="display: inline;">
                     <button type="submit" class="btn waves-effect waves-light" style="background-color: #6c757d; border-radius: 999px; box-shadow: none; padding: 0 16px; height: 36px; line-height: 36px; font-size: 0.85rem;" onclick="return confirm('Are you sure you want to cancel this swap request?')">
                       <i class="material-icons left" style="font-size: 16px;">close</i>
                       Cancel Request
