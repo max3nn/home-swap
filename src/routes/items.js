@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
 
 const Item = require('../models/Item');
 const { ITEM_CATEGORIES, isValidCategory, normalizeCategory } = require('../config/itemCategories');
@@ -19,6 +20,79 @@ const upload = multer({
     return cb(new Error('Only image uploads are allowed'));
   },
 });
+
+// Reusable function to create an item
+const createItem = async (itemData, imageFile = null, imageUrl = null) => {
+  const errors = [];
+
+  // Validate required fields
+  if (!itemData.title || itemData.title.trim().length < 1) {
+    errors.push('Item title is required.');
+  }
+  if (itemData.title && itemData.title.length > 100) {
+    errors.push('Item title must be less than 100 characters.');
+  }
+  if (!itemData.description || itemData.description.trim().length < 1) {
+    errors.push('Item description is required.');
+  }
+  if (itemData.description && itemData.description.length > 1000) {
+    errors.push('Item description must be less than 1000 characters.');
+  }
+  if (!itemData.itemType || itemData.itemType.trim().length < 1) {
+    errors.push('Item category is required.');
+  }
+
+  // Validate category
+  if (itemData.itemType && !ITEM_CATEGORIES.includes(itemData.itemType)) {
+    errors.push('Invalid item category selected.');
+  }
+
+  // Validate image URL if provided
+  if (imageUrl && imageUrl.trim().length > 0) {
+    try {
+      new URL(imageUrl.trim());
+    } catch {
+      errors.push('Please enter a valid image URL.');
+    }
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  // Prepare item data
+  const itemId = uuidv4();
+  const newItemData = {
+    itemId,
+    title: itemData.title.trim(),
+    description: itemData.description.trim(),
+    itemType: itemData.itemType.trim(),
+    ownerId: itemData.ownerId,
+    wantedCategories: itemData.wantedCategories || [],
+    hasImage: false,
+  };
+
+  // Handle image
+  if (imageFile) {
+    newItemData.image = {
+      data: imageFile.buffer,
+      contentType: imageFile.mimetype
+    };
+    newItemData.hasImage = true;
+    newItemData.imageUrl = `/items/${itemId}/image`;
+  } else if (imageUrl && imageUrl.trim().length > 0) {
+    newItemData.imageUrl = imageUrl.trim();
+    newItemData.hasImage = true;
+  }
+
+  try {
+    const item = new Item(newItemData);
+    await item.save();
+    return { success: true, item };
+  } catch (err) {
+    return { success: false, errors: ['Failed to create item: ' + err.message] };
+  }
+};
 
 const toBuffer = (value) => {
   if (!value) return null;
@@ -149,8 +223,8 @@ router.get('/new', (req, res) => {
   });
 });
 
-// POST /items - Create a new item
-router.post('/', upload.single('image'), async (req, res, next) => {
+// POST /items/new - Create a new item
+router.post('/new', upload.single('image'), async (req, res, next) => {
   try {
     if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
       return res.status(503).render('error', {
@@ -161,11 +235,7 @@ router.post('/', upload.single('image'), async (req, res, next) => {
     }
 
     const user = req.session.user;
-    const errors = [];
-
-    const title = (req.body.title || '').trim();
-    const description = (req.body.description || '').trim();
-    const itemTypeRaw = (req.body.itemType || '').trim();
+    const { title, description, itemType, imageUrl } = req.body;
 
     let wanted = req.body.wantedCategories || [];
     if (typeof wanted === 'string') wanted = [wanted];
@@ -173,42 +243,148 @@ router.post('/', upload.single('image'), async (req, res, next) => {
       .map((c) => normalizeCategory(c))
       .filter((c) => c && isValidCategory(c));
 
-    const itemType = isValidCategory(itemTypeRaw) ? normalizeCategory(itemTypeRaw) : '';
+    const itemData = {
+      title,
+      description,
+      itemType,
+      ownerId: user.userId,
+      wantedCategories
+    };
 
-    if (!title) errors.push('Title is required');
-    if (!description) errors.push('Description is required');
+    const result = await createItem(itemData, req.file, imageUrl);
 
-    const image = req.file && req.file.buffer
-      ? { data: req.file.buffer, contentType: req.file.mimetype || 'application/octet-stream' }
-      : undefined;
-
-    if (errors.length > 0) {
+    if (!result.success) {
       return res.status(400).render('item-new', {
         title: 'Post Item',
         categories: ITEM_CATEGORIES,
-        errors,
-        values: { title, description, itemType: itemTypeRaw, wantedCategories: wanted || [] },
+        errors: result.errors,
+        values: { title, description, itemType, wantedCategories: wanted || [] },
       });
     }
 
-    const itemId = new mongoose.Types.ObjectId().toString();
-
-    const imageUrl = image ? `/items/${itemId}/image` : '';
-
-    await Item.create({
-      itemId,
-      title,
-      description,
-      imageUrl,
-      image,
-      hasImage: Boolean(image),
-      ownerId: user.userId,
-      itemType: itemType || undefined,
-      wantedCategories,
-    });
-
-    console.log(`[ITEM_CREATE] User ${user.userId} created item ${itemId}`);
+    console.log(`[ITEM_CREATE] User ${user.userId} created item ${result.item.itemId}`);
     return res.redirect('/search');
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// GET /items/:itemId - View individual item with swap requests
+router.get('/:itemId', async (req, res, next) => {
+  try {
+    const { itemId } = req.params;
+
+    if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+      return res.status(503).render('error', {
+        title: 'Service Unavailable',
+        message: 'Database connection unavailable. Please try again later.',
+        error: {},
+      });
+    }
+
+    // Get the item
+    const item = await Item.findOne({ itemId }).lean();
+    if (!item) {
+      return res.status(404).render('error', {
+        title: 'Item Not Found',
+        message: 'The item you are looking for does not exist.',
+        error: {},
+      });
+    }
+
+    // Get the owner information
+    const User = require('../models/User');
+    const owner = await User.findOne({ userId: item.ownerId }, { username: 1, userId: 1 }).lean();
+    const itemWithOwner = {
+      ...item,
+      ownerName: owner ? owner.username : 'Unknown User'
+    };
+
+    // Get swap requests for this item (if user is the owner)
+    let swapRequests = [];
+    let outgoingSwapRequests = [];
+    let hasPendingSwaps = false;
+
+    if (req.session.user.userId === itemWithOwner.ownerId) {
+      const SwapRequest = require('../models/SwapRequest');
+
+      const requests = await SwapRequest.find({ itemId }).lean();
+
+      // Get offered items and requester info
+      const offeredItemIds = requests.map(r => r.offeredItemId);
+      const requesterIds = [...new Set(requests.map(r => r.ownerId))];
+
+      const offeredItems = await Item.find({ itemId: { $in: offeredItemIds } }).lean();
+      const requesters = await User.find({ userId: { $in: requesterIds } }, { password: 0 }).lean();
+
+      const offeredItemsMap = offeredItems.reduce((acc, item) => {
+        acc[item.itemId] = item;
+        return acc;
+      }, {});
+
+      const requestersMap = requesters.reduce((acc, user) => {
+        acc[user.userId] = user;
+        return acc;
+      }, {});
+
+      swapRequests = requests.map(request => ({
+        ...request,
+        offeredItem: offeredItemsMap[request.offeredItemId],
+        requester: requestersMap[request.ownerId]
+      }));
+    }
+
+    // Get outgoing swap requests (where this item is being offered)
+    if (req.session.user.userId === itemWithOwner.ownerId) {
+      const SwapRequest = require('../models/SwapRequest');
+      const outgoingRequests = await SwapRequest.find({
+        offeredItemId: itemId,
+        ownerId: req.session.user.userId
+      }).lean();
+
+      // Get target items and their owners for outgoing requests
+      const targetItemIds = outgoingRequests.map(r => r.itemId);
+      const targetItems = await Item.find({ itemId: { $in: targetItemIds } }).lean();
+      const targetItemOwnerIds = [...new Set(targetItems.map(item => item.ownerId))];
+      const targetItemOwners = await User.find({ userId: { $in: targetItemOwnerIds } }, { username: 1, userId: 1 }).lean();
+
+      const targetItemsMap = targetItems.reduce((acc, item) => {
+        acc[item.itemId] = item;
+        return acc;
+      }, {});
+
+      const targetOwnersMap = targetItemOwners.reduce((acc, user) => {
+        acc[user.userId] = user.username;
+        return acc;
+      }, {});
+
+      outgoingSwapRequests = outgoingRequests.map(request => ({
+        ...request,
+        targetItem: {
+          ...targetItemsMap[request.itemId],
+          ownerName: targetOwnersMap[targetItemsMap[request.itemId]?.ownerId] || 'Unknown User'
+        }
+      }));
+    }
+
+    // Check if item has any pending swap requests (as target or offered item)
+    const SwapRequest = require('../models/SwapRequest');
+    const pendingCount = await SwapRequest.countDocuments({
+      $or: [
+        { itemId: itemId, status: 'pending' },
+        { offeredItemId: itemId, status: 'pending' }
+      ]
+    });
+    hasPendingSwaps = pendingCount > 0;
+
+    return res.render('item-detail', {
+      title: itemWithOwner.title,
+      item: itemWithOwner,
+      swapRequests,
+      outgoingSwapRequests,
+      hasPendingSwaps,
+      isOwner: req.session.user.userId === itemWithOwner.ownerId
+    });
   } catch (err) {
     return next(err);
   }
@@ -273,8 +449,8 @@ router.get('/:itemId/edit', async (req, res, next) => {
   }
 });
 
-// PUT /items/:itemId - Update an item
-router.put('/:itemId', upload.single('image'), async (req, res, next) => {
+// POST /items/:itemId/edit - Update an item
+router.post('/:itemId/edit', upload.single('image'), async (req, res, next) => {
   try {
     if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
       return res.status(503).render('error', {
@@ -377,58 +553,6 @@ router.put('/:itemId', upload.single('image'), async (req, res, next) => {
   }
 });
 
-// DELETE /items/:itemId - Delete an item
-router.delete('/:itemId', async (req, res, next) => {
-  try {
-    if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
-      return res.status(503).render('error', {
-        title: 'Delete Unavailable',
-        message: 'Database connection unavailable. Please try again later.',
-        error: {},
-      });
-    }
-
-    const itemId = (req.params.itemId || '').trim();
-    if (!itemId) {
-      return res.status(400).render('error', {
-        title: 'Invalid Item',
-        message: 'Item ID is required.',
-        error: {},
-      });
-    }
-
-    const user = req.session.user;
-    const item = await Item.findOne({ itemId });
-
-    if (!item) {
-      return res.status(404).render('error', {
-        title: 'Item Not Found',
-        message: 'The item you are trying to delete does not exist.',
-        error: {},
-      });
-    }
-
-    // Verify that the user is the owner
-    if (item.ownerId !== user.userId) {
-      console.log(`[ITEM_DELETE_ATTEMPT] User ${user.userId} attempted to delete item ${itemId} owned by ${item.ownerId}`);
-      return res.status(403).render('error', {
-        title: 'Access Denied',
-        message: 'You can only delete your own items.',
-        error: {},
-      });
-    }
-
-    // Delete the item
-    await Item.deleteOne({ itemId });
-
-    console.log(`[ITEM_DELETE] User ${user.userId} deleted item ${itemId}`);
-
-    return res.redirect('/search');
-  } catch (err) {
-    return next(err);
-  }
-});
-
 // Multer / upload error handler
 router.use(async (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
@@ -467,4 +591,7 @@ router.use(async (err, req, res, next) => {
   return next(err);
 });
 
-module.exports = router;
+module.exports = {
+  router,
+  createItem
+};

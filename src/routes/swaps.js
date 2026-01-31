@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
 
 const SwapRequest = require('../models/SwapRequest');
 const Item = require('../models/Item');
@@ -29,8 +30,8 @@ router.use((req, res, next) => {
     next();
 });
 
-// GET /swaps/:itemId - Show swap request form
-router.get('/:itemId', async (req, res, next) => {
+// GET /swaps/request/:itemId - Show swap request form
+router.get('/request/:itemId', async (req, res, next) => {
     try {
         const { itemId } = req.params;
 
@@ -94,8 +95,8 @@ router.get('/:itemId', async (req, res, next) => {
     }
 });
 
-// POST /swaps/:itemId - Create new swap request
-router.post('/:itemId', upload.single('image'), async (req, res, next) => {
+// POST /swaps/request/:itemId - Process swap request
+router.post('/request/:itemId', upload.single('image'), async (req, res, next) => {
     try {
         const { itemId } = req.params;
         const { offeredItemId, message, createNewItem, title, description, itemType, imageUrl } = req.body;
@@ -211,7 +212,7 @@ router.post('/:itemId', upload.single('image'), async (req, res, next) => {
 
         // Create swap request
         const swapRequest = new SwapRequest({
-            swapRequestId: new mongoose.Types.ObjectId().toString(),
+            swapRequestId: uuidv4(),
             itemId: targetItem.itemId,
             message: message.trim(),
             imageUrl: offeredItem.imageUrl || (offeredItem.hasImage && offeredItem.image ? `/items/${offeredItem.itemId}/image` : null),
@@ -230,8 +231,8 @@ router.post('/:itemId', upload.single('image'), async (req, res, next) => {
     }
 });
 
-// GET /swaps/outgoing - Show user's outgoing swap requests
-router.get('/outgoing', async (req, res, next) => {
+// GET /swaps/my-requests - Show user's outgoing swap requests
+router.get('/my-requests', async (req, res, next) => {
     try {
         if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
             return res.status(503).render('error', {
@@ -289,8 +290,8 @@ router.get('/outgoing', async (req, res, next) => {
     }
 });
 
-// GET /swaps/incoming - Show swap requests received by user
-router.get('/incoming', async (req, res, next) => {
+// GET /swaps/received - Show swap requests received by user
+router.get('/received', async (req, res, next) => {
     try {
         if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
             return res.status(503).render('error', {
@@ -347,8 +348,8 @@ router.get('/incoming', async (req, res, next) => {
     }
 });
 
-// PUT /swaps/:swapRequestId/accept - Accept a swap request
-router.put('/:swapRequestId/accept', async (req, res, next) => {
+// POST /swaps/:swapRequestId/accept - Accept a swap request
+router.post('/:swapRequestId/accept', async (req, res, next) => {
     try {
         const { swapRequestId } = req.params;
 
@@ -404,8 +405,8 @@ router.put('/:swapRequestId/accept', async (req, res, next) => {
     }
 });
 
-// PUT /swaps/:swapRequestId/reject - Reject a swap request
-router.put('/:swapRequestId/reject', async (req, res, next) => {
+// POST /swaps/:swapRequestId/reject - Reject a swap request
+router.post('/:swapRequestId/reject', async (req, res, next) => {
     try {
         const { swapRequestId } = req.params;
 
@@ -452,8 +453,8 @@ router.put('/:swapRequestId/reject', async (req, res, next) => {
     }
 });
 
-// PUT /swaps/:swapRequestId/cancel - Cancel a swap request (by requester)
-router.put('/:swapRequestId/cancel', async (req, res, next) => {
+// POST /swaps/:swapRequestId/cancel - Cancel a swap request (by requester)
+router.post('/:swapRequestId/cancel', async (req, res, next) => {
     try {
         const { swapRequestId } = req.params;
 
@@ -502,7 +503,7 @@ router.put('/:swapRequestId/cancel', async (req, res, next) => {
         );
 
         req.session.success = 'Swap request cancelled successfully.';
-        res.redirect('/swaps/outgoing');
+        res.redirect('/swaps/my-requests');
     } catch (err) {
         return next(err);
     }
