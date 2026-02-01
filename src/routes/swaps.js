@@ -30,8 +30,8 @@ router.use((req, res, next) => {
     next();
 });
 
-// GET /swaps/outgoing - Show user's outgoing swap requests
-router.get('/outgoing', async (req, res, next) => {
+// GET /swaps/received - Show swap requests received by the user
+router.get('/received', async (req, res, next) => {
     try {
         if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
             return res.status(503).render('error', {
@@ -41,18 +41,85 @@ router.get('/outgoing', async (req, res, next) => {
             });
         }
 
-        // Get user's swap requests
+        // Get swap requests where the user is the receiver
         const swapRequests = await SwapRequest.find({
-            ownerId: req.session.user.userId
+            receiverId: req.session.user.userId
         }).lean();
+        
 
-        // If no swap requests, render empty page
-        if (swapRequests.length === 0) {
-            return res.render('swap-my-requests', {
-                title: 'My Swap Requests',
-                swapRequests: []
+        // Get associated items for each request
+        const itemIds = [...new Set([
+            ...swapRequests.map(req => req.itemId),
+            ...swapRequests.map(req => req.offeredItemId)
+        ])];
+
+        const items = await Item.find({ itemId: { $in: itemIds } }).lean();
+        const itemsMap = items.reduce((acc, item) => {
+            acc[item.itemId] = item;
+
+            return acc;
+        }, {});
+
+        // Get owner information for all items
+        const ownerIds = [...new Set(items.map(item => item.ownerId))];
+        
+        // Get requester and receiver information from swap requests
+        const requesterIds = [...new Set(swapRequests.map(req => req.requesterId).filter(Boolean))];
+        const receiverIds = [...new Set(swapRequests.map(req => req.receiverId).filter(Boolean))];
+        const allUserIds = [...new Set([...ownerIds, ...requesterIds, ...receiverIds])];
+        
+        const users = await User.find({ userId: { $in: allUserIds } }, { username: 1, userId: 1 }).lean();
+        const userMap = users.reduce((map, user) => {
+            map[user.userId] = user.username;
+            return map;
+        }, {});
+
+        // Enrich swap requests with item data and owner names
+        const enrichedRequests = swapRequests.map(request => ({
+            ...request,
+            targetItem: {
+                ...itemsMap[request.itemId],
+                ownerName: userMap[itemsMap[request.itemId]?.ownerId] || 'Unknown User',
+                ownerId: itemsMap[request.itemId]?.ownerId || null
+            },
+            offeredItem: {
+                ...itemsMap[request.offeredItemId],
+                ownerName: userMap[itemsMap[request.offeredItemId]?.ownerId] || 'Unknown User',
+                ownerId: itemsMap[request.offeredItemId]?.ownerId || null
+            },
+            requesterId: request.requesterId,
+            receiverId: request.receiverId,
+            requesterName: userMap[request.requesterId] || 'Unknown User',
+            receiverName: userMap[request.receiverId] || 'Unknown User',
+            isRequester: request.offeredItemId == req.session.user.userId ? true : false
+        }));
+
+        res.render('swap-received', {
+            title: 'Received Swap Requests',
+            swapRequests: enrichedRequests
+        });
+    } catch (err) {
+        return next(err);
+    }
+});
+
+// GET /swaps/my-requests - Show user's outgoing swap requests
+router.get('/my-requests', async (req, res, next) => {
+    try {
+        if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+            return res.status(503).render('error', {
+                title: 'Service Unavailable',
+                message: 'Database connection unavailable. Please try again later.',
+                error: {},
             });
         }
+
+        // Get user's swap requests where they are the requester
+        const swapRequests = await SwapRequest.find({
+            requesterId: req.session.user.userId
+        }).lean();
+
+        var isTheRequester = true;
 
         // Get associated items for each request
         const itemIds = [...new Set([
@@ -68,106 +135,40 @@ router.get('/outgoing', async (req, res, next) => {
 
         // Get owner information for all items
         const ownerIds = [...new Set(items.map(item => item.ownerId))];
-        const User = require('../models/User');
-        const owners = await User.find({ userId: { $in: ownerIds } }, { username: 1, userId: 1 }).lean();
-        const ownerMap = owners.reduce((map, owner) => {
-            map[owner.userId] = owner.username;
+        
+        // Get requester and receiver information from swap requests
+        const requesterIds = [...new Set(swapRequests.map(req => req.requesterId).filter(Boolean))];
+        const receiverIds = [...new Set(swapRequests.map(req => req.receiverId).filter(Boolean))];
+        const allUserIds = [...new Set([...ownerIds, ...requesterIds, ...receiverIds])];
+        
+        const users = await User.find({ userId: { $in: allUserIds } }, { username: 1, userId: 1 }).lean();
+        const userMap = users.reduce((map, user) => {
+            map[user.userId] = user.username;
             return map;
         }, {});
 
-        // Enrich swap requests with item data and owner names, filtering out requests with missing items
-        const enrichedRequests = swapRequests
-            .filter(request => itemsMap[request.itemId] && itemsMap[request.offeredItemId])
-            .map(request => ({
-                ...request,
-                targetItem: {
-                    ...itemsMap[request.itemId],
-                    ownerName: ownerMap[itemsMap[request.itemId]?.ownerId] || 'Unknown User'
-                },
-                offeredItem: {
-                    ...itemsMap[request.offeredItemId],
-                    ownerName: ownerMap[itemsMap[request.offeredItemId]?.ownerId] || 'Unknown User'
-                }
-            }));
+        // Enrich swap requests with item data and owner names
+        const enrichedRequests = swapRequests.map(request => ({
+            ...request,
+            targetItem: {
+                ...itemsMap[request.itemId],
+                ownerName: userMap[itemsMap[request.itemId]?.ownerId] || 'Unknown User',
+                ownerId: itemsMap[request.itemId]?.ownerId || null
+            },
+            offeredItem: {
+                ...itemsMap[request.offeredItemId],
+                ownerName: userMap[itemsMap[request.offeredItemId]?.ownerId] || 'Unknown User',
+                ownerId: itemsMap[request.offeredItemId]?.ownerId || null
+            },
+            requesterId: request.requesterId,
+            receiverId: request.receiverId,
+            requesterName: userMap[request.requesterId] || 'Unknown User',
+            receiverName: userMap[request.receiverId] || 'Unknown User',
+            isRequester: itemsMap[request.offeredItemId]?.ownerId == req.session.user.userId ? true : false
+        }));
 
         res.render('swap-my-requests', {
             title: 'My Swap Requests',
-            swapRequests: enrichedRequests
-        });
-    } catch (err) {
-        return next(err);
-    }
-});
-
-// GET /swaps/incoming - Show swap requests received by user
-router.get('/incoming', async (req, res, next) => {
-    try {
-        if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
-            return res.status(503).render('error', {
-                title: 'Service Unavailable',
-                message: 'Database connection unavailable. Please try again later.',
-                error: {},
-            });
-        }
-
-        // First get user's items to find relevant swap requests
-        const userItems = await Item.find({ ownerId: req.session.user.userId }).lean();
-        const userItemIds = userItems.map(item => item.itemId);
-
-        // If user has no items, they can't receive swap requests
-        if (userItemIds.length === 0) {
-            return res.render('swap-received', {
-                title: 'Received Swap Requests',
-                swapRequests: []
-            });
-        }
-
-        // Get swap requests for user's items
-        const swapRequests = await SwapRequest.find({
-            itemId: { $in: userItemIds }
-        }).lean();
-
-        // If no swap requests, render empty page
-        if (swapRequests.length === 0) {
-            return res.render('swap-received', {
-                title: 'Received Swap Requests',
-                swapRequests: []
-            });
-        }
-
-        // Get associated items and users for each request
-        const itemIds = [...new Set([
-            ...swapRequests.map(req => req.itemId),
-            ...swapRequests.map(req => req.offeredItemId)
-        ])];
-
-        const userIds = [...new Set(swapRequests.map(req => req.ownerId))];
-
-        const items = await Item.find({ itemId: { $in: itemIds } }).lean();
-        const users = await User.find({ userId: { $in: userIds } }, { password: 0 }).lean();
-
-        const itemsMap = items.reduce((acc, item) => {
-            acc[item.itemId] = item;
-            return acc;
-        }, {});
-
-        const usersMap = users.reduce((acc, user) => {
-            acc[user.userId] = user;
-            return acc;
-        }, {});
-
-        // Enrich swap requests with item and user data, filtering out requests with missing data
-        const enrichedRequests = swapRequests
-            .filter(request => itemsMap[request.itemId] && itemsMap[request.offeredItemId] && usersMap[request.ownerId])
-            .map(request => ({
-                ...request,
-                targetItem: itemsMap[request.itemId],
-                offeredItem: itemsMap[request.offeredItemId],
-                requester: usersMap[request.ownerId]
-            }));
-
-        res.render('swap-received', {
-            title: 'Received Swap Requests',
             swapRequests: enrichedRequests
         });
     } catch (err) {
@@ -361,6 +362,8 @@ router.post('/:itemId', upload.single('image'), async (req, res, next) => {
             itemId: targetItem.itemId,
             message: message.trim(),
             imageUrl: offeredItem.imageUrl || (offeredItem.hasImage && offeredItem.image ? `/items/${offeredItem.itemId}/image` : null),
+            requesterId: req.session.user.userId,
+            receiverId: targetItem.ownerId,
             ownerId: req.session.user.userId,
             offeredItemId: offeredItem.itemId,
             status: 'pending',
@@ -398,9 +401,8 @@ router.put('/:swapRequestId/accept', async (req, res, next) => {
             });
         }
 
-        // Get the target item to check ownership
-        const targetItem = await Item.findOne({ itemId: swapRequest.itemId });
-        if (!targetItem || targetItem.ownerId !== req.session.user.userId) {
+        // Only the receiver can accept the request
+        if (swapRequest.receiverId !== req.session.user.userId) {
             return res.status(403).render('error', {
                 title: 'Unauthorized',
                 message: 'You are not authorized to accept this swap request.',
@@ -418,6 +420,7 @@ router.put('/:swapRequestId/accept', async (req, res, next) => {
         );
 
         // Mark both items as swapped
+        const targetItem = await Item.findOne({ itemId: swapRequest.itemId });
         const offeredItem = await Item.findOne({ itemId: swapRequest.offeredItemId });
         if (targetItem) {
             await Item.updateOne({ itemId: targetItem.itemId }, { status: 'swapped' });
@@ -427,7 +430,7 @@ router.put('/:swapRequestId/accept', async (req, res, next) => {
         }
 
         req.session.success = 'Swap request accepted successfully!';
-        res.redirect('/swaps/incoming');
+        res.redirect('/swaps/received');
     } catch (err) {
         return next(err);
     }
@@ -455,9 +458,8 @@ router.put('/:swapRequestId/reject', async (req, res, next) => {
             });
         }
 
-        // Get the target item to check ownership
-        const targetItem = await Item.findOne({ itemId: swapRequest.itemId });
-        if (!targetItem || targetItem.ownerId !== req.session.user.userId) {
+        // Only the receiver can reject the request
+        if (swapRequest.receiverId !== req.session.user.userId) {
             return res.status(403).render('error', {
                 title: 'Unauthorized',
                 message: 'You are not authorized to reject this swap request.',
@@ -475,7 +477,215 @@ router.put('/:swapRequestId/reject', async (req, res, next) => {
         );
 
         req.session.success = 'Swap request rejected.';
-        res.redirect('/swaps/incoming');
+        res.redirect('/swaps/received');
+    } catch (err) {
+        return next(err);
+    }
+});
+
+// POST /swaps/:swapRequestId/accept - Accept a swap request (for form compatibility)
+router.post('/:swapRequestId/accept', async (req, res, next) => {
+    try {
+        const { swapRequestId } = req.params;
+
+        if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+            return res.status(503).render('error', {
+                title: 'Service Unavailable',
+                message: 'Database connection unavailable. Please try again later.',
+                error: {},
+            });
+        }
+
+        const swapRequest = await SwapRequest.findOne({ swapRequestId });
+        if (!swapRequest) {
+            return res.status(404).render('error', {
+                title: 'Swap Request Not Found',
+                message: 'The swap request you are trying to accept does not exist.',
+                error: {},
+            });
+        }
+
+        // Only the receiver can accept the request
+        if (swapRequest.receiverId !== req.session.user.userId) {
+            return res.status(403).render('error', {
+                title: 'Unauthorized',
+                message: 'You are not authorized to accept this swap request.',
+                error: {},
+            });
+        }
+
+        // Update the swap request status
+        await SwapRequest.updateOne(
+            { swapRequestId },
+            {
+                status: 'accepted',
+                acceptedAt: new Date()
+            }
+        );
+
+        // Mark both items as swapped
+        const targetItem = await Item.findOne({ itemId: swapRequest.itemId });
+        const offeredItem = await Item.findOne({ itemId: swapRequest.offeredItemId });
+        if (targetItem) {
+            await Item.updateOne({ itemId: targetItem.itemId }, { status: 'swapped' });
+        }
+        if (offeredItem) {
+            await Item.updateOne({ itemId: offeredItem.itemId }, { status: 'swapped' });
+        }
+
+        req.session.success = 'Swap request accepted successfully!';
+        res.redirect('/swaps/received');
+    } catch (err) {
+        return next(err);
+    }
+});
+
+// POST /swaps/:swapRequestId/reject - Reject a swap request (for form compatibility)
+router.post('/:swapRequestId/reject', async (req, res, next) => {
+    try {
+        const { swapRequestId } = req.params;
+
+        if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+            return res.status(503).render('error', {
+                title: 'Service Unavailable',
+                message: 'Database connection unavailable. Please try again later.',
+                error: {},
+            });
+        }
+
+        const swapRequest = await SwapRequest.findOne({ swapRequestId });
+        if (!swapRequest) {
+            return res.status(404).render('error', {
+                title: 'Swap Request Not Found',
+                message: 'The swap request you are trying to reject does not exist.',
+                error: {},
+            });
+        }
+
+        // Only the receiver can reject the request
+        if (swapRequest.receiverId !== req.session.user.userId) {
+            return res.status(403).render('error', {
+                title: 'Unauthorized',
+                message: 'You are not authorized to reject this swap request.',
+                error: {},
+            });
+        }
+
+        // Update the swap request status
+        await SwapRequest.updateOne(
+            { swapRequestId },
+            {
+                status: 'rejected',
+                rejectedAt: new Date()
+            }
+        );
+
+        req.session.success = 'Swap request rejected.';
+        res.redirect('/swaps/received');
+    } catch (err) {
+        return next(err);
+    }
+});
+
+// POST /swaps/:swapRequestId/accept - Accept a swap request (for form compatibility)
+router.post('/:swapRequestId/accept', async (req, res, next) => {
+    try {
+        const { swapRequestId } = req.params;
+
+        if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+            return res.status(503).render('error', {
+                title: 'Service Unavailable',
+                message: 'Database connection unavailable. Please try again later.',
+                error: {},
+            });
+        }
+
+        const swapRequest = await SwapRequest.findOne({ swapRequestId });
+        if (!swapRequest) {
+            return res.status(404).render('error', {
+                title: 'Swap Request Not Found',
+                message: 'The swap request you are trying to accept does not exist.',
+                error: {},
+            });
+        }
+
+        // Only the receiver can accept the request
+        if (swapRequest.receiverId !== req.session.user.userId) {
+            return res.status(403).render('error', {
+                title: 'Unauthorized',
+                message: 'You are not authorized to accept this swap request.',
+                error: {},
+            });
+        }
+
+        // Update the swap request status
+        await SwapRequest.updateOne(
+            { swapRequestId },
+            {
+                status: 'accepted',
+                acceptedAt: new Date()
+            }
+        );
+
+        // Mark both items as swapped
+        const targetItem = await Item.findOne({ itemId: swapRequest.itemId });
+        const offeredItem = await Item.findOne({ itemId: swapRequest.offeredItemId });
+        if (targetItem) {
+            await Item.updateOne({ itemId: targetItem.itemId }, { status: 'swapped' });
+        }
+        if (offeredItem) {
+            await Item.updateOne({ itemId: offeredItem.itemId }, { status: 'swapped' });
+        }
+
+        req.session.success = 'Swap request accepted successfully!';
+        res.redirect('/swaps/received');
+    } catch (err) {
+        return next(err);
+    }
+});
+
+// POST /swaps/:swapRequestId/reject - Reject a swap request (for form compatibility)
+router.post('/:swapRequestId/reject', async (req, res, next) => {
+    try {
+        const { swapRequestId } = req.params;
+
+        if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+            return res.status(503).render('error', {
+                title: 'Service Unavailable',
+                message: 'Database connection unavailable. Please try again later.',
+                error: {},
+            });
+        }
+
+        const swapRequest = await SwapRequest.findOne({ swapRequestId });
+        if (!swapRequest) {
+            return res.status(404).render('error', {
+                title: 'Swap Request Not Found',
+                message: 'The swap request you are trying to reject does not exist.',
+                error: {},
+            });
+        }
+
+        // Only the receiver can reject the request
+        if (swapRequest.receiverId !== req.session.user.userId) {
+            return res.status(403).render('error', {
+                title: 'Unauthorized',
+                message: 'You are not authorized to reject this swap request.',
+                error: {},
+            });
+        }
+
+        // Update the swap request status
+        await SwapRequest.updateOne(
+            { swapRequestId },
+            {
+                status: 'rejected',
+                rejectedAt: new Date()
+            }
+        );
+
+        req.session.success = 'Swap request rejected.';
+        res.redirect('/swaps/received');
     } catch (err) {
         return next(err);
     }
@@ -504,7 +714,7 @@ router.put('/:swapRequestId/cancel', async (req, res, next) => {
         }
 
         // Only the requester can cancel their own requests
-        if (swapRequest.ownerId !== req.session.user.userId) {
+        if (swapRequest.requesterId !== req.session.user.userId) {
             return res.status(403).render('error', {
                 title: 'Unauthorized',
                 message: 'You can only cancel your own swap requests.',
@@ -531,7 +741,63 @@ router.put('/:swapRequestId/cancel', async (req, res, next) => {
         );
 
         req.session.success = 'Swap request cancelled successfully.';
-        res.redirect('/swaps/outgoing');
+        res.redirect('/swaps/my-requests');
+    } catch (err) {
+        return next(err);
+    }
+});
+
+// POST /swaps/:swapRequestId/cancel - Cancel a swap request (by requester) - for form compatibility
+router.post('/:swapRequestId/cancel', async (req, res, next) => {
+    try {
+        const { swapRequestId } = req.params;
+
+        if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+            return res.status(503).render('error', {
+                title: 'Service Unavailable',
+                message: 'Database connection unavailable. Please try again later.',
+                error: {},
+            });
+        }
+
+        const swapRequest = await SwapRequest.findOne({ swapRequestId });
+        if (!swapRequest) {
+            return res.status(404).render('error', {
+                title: 'Swap Request Not Found',
+                message: 'The swap request you are trying to cancel does not exist.',
+                error: {},
+            });
+        }
+
+        // Only the requester can cancel their own requests
+        if (swapRequest.requesterId !== req.session.user.userId) {
+            return res.status(403).render('error', {
+                title: 'Unauthorized',
+                message: 'You can only cancel your own swap requests.',
+                error: {},
+            });
+        }
+
+        // Only pending requests can be cancelled
+        if (swapRequest.status !== 'pending') {
+            return res.status(400).render('error', {
+                title: 'Cannot Cancel',
+                message: 'Only pending swap requests can be cancelled.',
+                error: {},
+            });
+        }
+
+        // Update the swap request status
+        await SwapRequest.updateOne(
+            { swapRequestId },
+            {
+                status: 'cancelled',
+                cancelledAt: new Date()
+            }
+        );
+
+        req.session.success = 'Swap request cancelled successfully.';
+        res.redirect('/swaps/my-requests');
     } catch (err) {
         return next(err);
     }

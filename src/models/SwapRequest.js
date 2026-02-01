@@ -22,6 +22,14 @@ const swapRequestsSchema = new mongoose.Schema({
         type: String,
         required: false,
     },
+    requesterId: {
+        type: String,
+        required: true,
+    },
+    receiverId: {
+        type: String,
+        required: true,
+    },
     ownerId: {
         type: String,
         required: true,
@@ -48,12 +56,16 @@ const swapRequestsSchema = new mongoose.Schema({
 
 // Add compound indexes for better query performance
 swapRequestsSchema.index({ itemId: 1, status: 1 }); // For filtering requests by item and status
-swapRequestsSchema.index({ ownerId: 1, status: 1 }); // For filtering user's requests by status
+swapRequestsSchema.index({ ownerId: 1, status: 1 }); // For filtering user's requests by status (backward compatibility)
+swapRequestsSchema.index({ requesterId: 1, status: 1 }); // For filtering requester's requests by status
+swapRequestsSchema.index({ receiverId: 1, status: 1 }); // For filtering receiver's requests by status
 swapRequestsSchema.index({ itemId: 1, createdAt: -1 }); // For chronological requests on items
 
 // Add indexes for better query performance
 swapRequestsSchema.index({ itemId: 1 });
 swapRequestsSchema.index({ ownerId: 1 });
+swapRequestsSchema.index({ requesterId: 1 });
+swapRequestsSchema.index({ receiverId: 1 });
 swapRequestsSchema.index({ status: 1 });
 swapRequestsSchema.index({ createdAt: -1 });
 

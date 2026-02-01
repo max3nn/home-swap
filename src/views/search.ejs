@@ -154,28 +154,20 @@
 
                     <div style="margin-top: auto; padding-top: 8px;">
                       <div style="color: hsl(var(--muted-foreground)); font-size: 0.8rem; margin-bottom: 10px;">
-                        Posted by <%= item.ownerName %>
+                        Owner: <%= item.ownerName %>
                       </div>
                       <div style="display:flex; gap: 8px; align-items:center; flex-wrap: wrap;">
                         <% if (user && user.userId === item.ownerId) { %>
                           <a href="/items/<%= item.itemId %>/edit" class="btn-primary waves-effect waves-light" style="white-space: nowrap; font-size: 0.85rem; padding: 0 16px; height: 32px; line-height: 32px;">
                             Edit
                           </a>
-                          <a href="#delete-modal-<%= item.itemId %>" class="btn waves-effect waves-light modal-trigger" style="white-space: nowrap; font-size: 0.85rem; padding: 0 12px; height: 32px; line-height: 32px; background-color: #dc2626; color: white;">
-                            <i class="material-icons" style="font-size: 16px;">delete</i>
-                          </a>
-                        <% } else if (user && item.status !== 'swapped') { %>
-                          <a href="/swaps/<%= item.itemId %>" class="btn-secondary waves-effect waves-light" style="white-space: nowrap; font-size: 0.85rem; padding: 0 16px; height: 32px; line-height: 32px;">
-                            Request Swap
-                          </a>
-                        <% } else if (user && item.status === 'swapped') { %>
-                          <button class="btn-secondary waves-effect waves-light" disabled style="opacity: 0.5; white-space: nowrap; font-size: 0.85rem; padding: 0 16px; height: 32px; line-height: 32px;">
-                            Already Swapped
+                          <button class="btn-warning waves-effect waves-light delete-item-btn" style="white-space: nowrap;" data-item-id="<%= item.itemId %>" data-item-title="<%= item.title %>">
+                            Delete
                           </button>
                         <% } else { %>
-                          <button class="btn-secondary waves-effect waves-light" disabled style="opacity: 0.75; font-size: 0.85rem; padding: 0 16px; height: 32px; line-height: 32px;">
+                          <a href="/swaps/<%= item.itemId %>" class="btn-primary waves-effect waves-light" style="white-space: nowrap;">
                             Request Swap
-                          </button>
+                          </a>
                         <% } %>
                       </div>
                     </div>
