@@ -133,12 +133,30 @@
                 </div>
               <% } else if (request.status === 'pending') { %>
                 <div style="margin-top: 16px;">
-                  <form method="POST" action="/swaps/<%= request.swapRequestId %>/cancel" style="display: inline;">
-                    <button type="submit" class="btn waves-effect waves-light" style="background-color: #6c757d; border-radius: 999px; box-shadow: none; padding: 0 16px; height: 36px; line-height: 36px; font-size: 0.85rem;" onclick="return confirm('Are you sure you want to cancel this swap request?')">
-                      <i class="material-icons left" style="font-size: 16px;">close</i>
-                      Cancel Request
-                    </button>
-                  </form>
+
+                  <% if (request.isRequester === true) { %>
+                    <!-- User is the requester - can cancel -->
+                    <form method="POST" action="/swaps/<%= request.swapRequestId %>/cancel" style="display: inline;">
+                      <button type="submit" class="btn-warning waves-effect waves-light" onclick="return confirm('Are you sure you want to cancel this swap request?')">
+                        <i class="material-icons left" style="font-size: 18px;">close</i>
+                        Cancel Request
+                      </button>
+                    </form>
+                  <% } else { %>
+                    <!-- User is the receiver - can accept or reject -->
+                    <form method="POST" action="/swaps/<%= request.swapRequestId %>/accept" style="display: inline; margin-right: 8px;">
+                      <button type="submit" class="btn waves-effect waves-light" style="background-color: #4caf50;" onclick="return confirm('Are you sure you want to accept this swap request?')">
+                        <i class="material-icons left" style="font-size: 18px;">check</i>
+                        Accept
+                      </button>
+                    </form>
+                    <form method="POST" action="/swaps/<%= request.swapRequestId %>/reject" style="display: inline;">
+                      <button type="submit" class="btn waves-effect waves-light" style="background-color: #f44336;" onclick="return confirm('Are you sure you want to reject this swap request?')">
+                        <i class="material-icons left" style="font-size: 18px;">close</i>
+                        Reject
+                      </button>
+                    </form>
+                  <% } %>
                 </div>
               <% } %>
 

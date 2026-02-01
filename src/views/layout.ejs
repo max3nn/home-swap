@@ -21,6 +21,8 @@
             --muted: 210 40% 96.1%;
             --muted-foreground: 215.4 16.3% 46.9%;
             --accent: 210 40% 96.1%;
+            --warning: 0 84.2% 60.2%;
+            --warning-foreground: 210 40% 98%;
             --radius: 0.5rem;
         }
 
@@ -86,12 +88,15 @@
             color: hsl(var(--primary-foreground));
             border-radius: var(--radius);
             padding: 0 24px;
-            height: 44px;
-            line-height: 44px;
+            height: 36px;
+            line-height: 36px;
             font-weight: 500;
             box-shadow: none;
             text-transform: none;
             transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-primary:hover {
@@ -105,17 +110,43 @@
             border: 1px solid hsl(var(--border));
             border-radius: var(--radius);
             padding: 0 24px;
-            height: 44px;
-            line-height: 42px;
+            height: 36px;
+            line-height: 36px;
             font-weight: 500;
             box-shadow: none;
             text-transform: none;
             transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-secondary:hover {
             background-color: hsl(var(--accent));
             border-color: hsl(214.3 31.8% 85%);
+        }
+
+        .btn-warning {
+            background-color: hsl(var(--warning));
+            color: hsl(var(--warning-foreground));
+            border: 1px solid hsl(var(--warning));
+            border-radius: var(--radius);
+            padding: 0 24px;
+            height: 36px;
+            line-height: 36px;
+            font-weight: 500;
+            box-shadow: none;
+            text-transform: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-warning:hover {
+            background-color: hsl(0 84.2% 55%);
+            border-color: hsl(0 84.2% 55%);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .stats-section {
@@ -422,7 +453,7 @@
                     <ul id="user-dropdown" class="dropdown-content">
                         <li><a href="/account"><i class="material-icons">person</i>My Account</a></li>
                         <li><a href="/swaps/my-requests"><i class="material-icons">send</i>My Swap Requests</a></li>
-                        <li><a href="/swaps/received"><i class="material-icons">inbox</i>Received Requests</a></li>
+                        <li><a href="/swaps/received"><i class="material-icons">inbox</i>Received Swap Requests</a></li>
                         <li class="divider"></li>
                         <li><a href="#" id="logout-link"><i class="material-icons">exit_to_app</i>Logout</a></li>
                     </ul>
