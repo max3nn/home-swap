@@ -18,7 +18,7 @@
       <% } %>
 
       <div style="background-color: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
-        <form method="POST" action="/items/<%= item.itemId %>/edit" enctype="multipart/form-data">
+        <form method="POST" action="/items/<%= item.itemId %>/edit?_method=PUT" enctype="multipart/form-data">
           <div class="row" style="margin-bottom: 0;">
             <div class="input-field col s12">
               <input id="title" name="title" type="text" value="<%= values && values.title ? values.title : '' %>" required />

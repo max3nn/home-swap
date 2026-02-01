@@ -204,13 +204,14 @@ When running with Docker Compose, the following services will be available:
 
 ### Search
 
-- `GET /search` - Search and browse items with filtering by query, category, and swap status
+- `GET /search` - Search and browse items with filtering by query, offered category, wanted category, and swap status
 
 ### Items
 
 - `POST /items` - Create item
 - `GET /items/new` - Render posting form
 - `GET /items/:itemId` - Get item details
+- `GET /items/:itemId/edit` - Render edit form
 - `PUT /items/:itemId` - Update item
 - `DELETE /items/:itemId` - Delete item
 - `GET /items/:itemId/image` - Serve item image from MongoDB
@@ -320,6 +321,7 @@ The **Items** collection stores information about items available for swapping.
 - `hasImage`: Boolean as to whether the item has an image or not (Boolean, Required)
 - `ownerId`: Reference to the user who owns the item (String, Foreign Key)
 - `itemType`: Category/type of item (String, Optional)
+- `wantedCategories`: Array of item categories the owner wants in exchange (Array of Strings, Optional)
 - `status`: Current availability status - 'available' (default) or 'swapped' (String, Required)
 - `createdAt`: Timestamp when request was created (Date, Auto-generated)
 
@@ -554,7 +556,7 @@ sequenceDiagram
 
     Note over O,DB: Owner Reviews Request
     O->>W: Visit received requests
-    W->>S: GET /swaps/received
+    W->>S: GET /swaps/incoming
     S->>DB: Find swap requests for owner's items
     DB-->>S: Swap requests with item/user details
     S-->>W: Display pending requests

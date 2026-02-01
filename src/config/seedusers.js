@@ -8,28 +8,28 @@ const seedUsers = async () => {
 
     const users = [
       {
-        userId: 1,
+        userId: '1',
         username: 'Antheis',
         email: 'antheis@example.com',
         password: 'password123',
         userrole: 'sample',
       },
       {
-        userId: 2,
+        userId: '2',
         username: 'Joshua',
         email: 'joshua@example.com',
         password: 'password123',
         userrole: 'sample',
       },
       {
-        userId: 3,
+        userId: '3',
         username: 'Rana',
         email: 'rana@example.com',
         password: 'password123',
         userrole: 'sample',
       },
       {
-        userId: 4,
+        userId: '4',
         username: 'Sheibha',
         email: 'sheibha@example.com',
         password: 'password123',

@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
 
 const SwapRequest = require('../models/SwapRequest');
 const Item = require('../models/Item');
@@ -240,7 +241,7 @@ router.get('/:itemId', async (req, res, next) => {
     }
 });
 
-// POST /swaps/:itemId - Create new swap request
+// POST /swaps/:itemId - Process swap request
 router.post('/:itemId', upload.single('image'), async (req, res, next) => {
     try {
         const { itemId } = req.params;
@@ -357,7 +358,7 @@ router.post('/:itemId', upload.single('image'), async (req, res, next) => {
 
         // Create swap request
         const swapRequest = new SwapRequest({
-            swapRequestId: new mongoose.Types.ObjectId().toString(),
+            swapRequestId: uuidv4(),
             itemId: targetItem.itemId,
             message: message.trim(),
             imageUrl: offeredItem.imageUrl || (offeredItem.hasImage && offeredItem.image ? `/items/${offeredItem.itemId}/image` : null),
@@ -429,7 +430,7 @@ router.put('/:swapRequestId/accept', async (req, res, next) => {
         }
 
         req.session.success = 'Swap request accepted successfully!';
-        res.redirect('/swaps/received');
+        res.redirect('/swaps/incoming');
     } catch (err) {
         return next(err);
     }
@@ -581,6 +582,110 @@ router.post('/:swapRequestId/reject', async (req, res, next) => {
 
         req.session.success = 'Swap request rejected.';
         res.redirect('/swaps/received');
+    } catch (err) {
+        return next(err);
+    }
+});
+
+// POST /swaps/:swapRequestId/accept - Accept a swap request (for form compatibility)
+router.post('/:swapRequestId/accept', async (req, res, next) => {
+    try {
+        const { swapRequestId } = req.params;
+
+        if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+            return res.status(503).render('error', {
+                title: 'Service Unavailable',
+                message: 'Database connection unavailable. Please try again later.',
+                error: {},
+            });
+        }
+
+        const swapRequest = await SwapRequest.findOne({ swapRequestId });
+        if (!swapRequest) {
+            return res.status(404).render('error', {
+                title: 'Swap Request Not Found',
+                message: 'The swap request you are trying to accept does not exist.',
+                error: {},
+            });
+        }
+
+        // Only the receiver can accept the request
+        if (swapRequest.receiverId !== req.session.user.userId) {
+            return res.status(403).render('error', {
+                title: 'Unauthorized',
+                message: 'You are not authorized to accept this swap request.',
+                error: {},
+            });
+        }
+
+        // Update the swap request status
+        await SwapRequest.updateOne(
+            { swapRequestId },
+            {
+                status: 'accepted',
+                acceptedAt: new Date()
+            }
+        );
+
+        // Mark both items as swapped
+        const targetItem = await Item.findOne({ itemId: swapRequest.itemId });
+        const offeredItem = await Item.findOne({ itemId: swapRequest.offeredItemId });
+        if (targetItem) {
+            await Item.updateOne({ itemId: targetItem.itemId }, { status: 'swapped' });
+        }
+        if (offeredItem) {
+            await Item.updateOne({ itemId: offeredItem.itemId }, { status: 'swapped' });
+        }
+
+        req.session.success = 'Swap request accepted successfully!';
+        res.redirect('/swaps/received');
+    } catch (err) {
+        return next(err);
+    }
+});
+
+// POST /swaps/:swapRequestId/reject - Reject a swap request (for form compatibility)
+router.post('/:swapRequestId/reject', async (req, res, next) => {
+    try {
+        const { swapRequestId } = req.params;
+
+        if (process.env.NODE_ENV !== 'test' && mongoose.connection.readyState !== 1) {
+            return res.status(503).render('error', {
+                title: 'Service Unavailable',
+                message: 'Database connection unavailable. Please try again later.',
+                error: {},
+            });
+        }
+
+        const swapRequest = await SwapRequest.findOne({ swapRequestId });
+        if (!swapRequest) {
+            return res.status(404).render('error', {
+                title: 'Swap Request Not Found',
+                message: 'The swap request you are trying to reject does not exist.',
+                error: {},
+            });
+        }
+
+        // Only the receiver can reject the request
+        if (swapRequest.receiverId !== req.session.user.userId) {
+            return res.status(403).render('error', {
+                title: 'Unauthorized',
+                message: 'You are not authorized to reject this swap request.',
+                error: {},
+            });
+        }
+
+        // Update the swap request status
+        await SwapRequest.updateOne(
+            { swapRequestId },
+            {
+                status: 'rejected',
+                rejectedAt: new Date()
+            }
+        );
+
+        req.session.success = 'Swap request rejected.';
+        res.redirect('/swaps/incoming');
     } catch (err) {
         return next(err);
     }

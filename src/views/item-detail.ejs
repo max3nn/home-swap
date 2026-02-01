@@ -98,8 +98,17 @@
                 <i class="material-icons left">edit</i>
                 Edit Item
               </a>
+              <a href="#delete-modal" class="btn btn-secondary waves-effect waves-light modal-trigger" style="border-radius: 999px; box-shadow: none; background-color: #dc2626; color: white;">
+                <i class="material-icons left">delete</i>
+                DELETE ITEM
+              </a>
+            <% } else if (item.status === 'swapped') { %>
+              <button class="btn waves-effect waves-light" disabled style="background-color: hsl(var(--muted)); color: hsl(var(--muted-foreground)); border-radius: 999px; box-shadow: none; opacity: 0.6;">
+                <i class="material-icons left">block</i>
+                Already Swapped
+              </button>
             <% } else { %>
-              <a href="/swaps/request/<%= item.itemId %>" class="btn waves-effect waves-light" style="background-color: hsl(var(--primary)); border-radius: 999px; box-shadow: none;">
+              <a href="/swaps/<%= item.itemId %>" class="btn waves-effect waves-light" style="background-color: hsl(var(--primary)); border-radius: 999px; box-shadow: none;">
                 <i class="material-icons left">swap_horiz</i>
                 Request Swap
               </a>
@@ -178,13 +187,13 @@
                   <!-- Actions -->
                   <% if (request.status === 'pending') { %>
                     <div style="display: flex; gap: 8px;">
-                      <form method="POST" action="/swaps/<%= request.swapRequestId %>/accept" style="display: inline;">
+                      <form method="POST" action="/swaps/<%= request.swapRequestId %>/accept?_method=PUT" style="display: inline;">
                         <button type="submit" class="btn waves-effect waves-light" style="background-color: #28a745; padding: 0 12px; height: 32px; line-height: 32px; font-size: 0.8rem; border-radius: 999px; box-shadow: none;" onclick="return confirm('Accept this swap?')">
                           <i class="material-icons left" style="font-size: 14px;">check</i>
                           Accept
                         </button>
                       </form>
-                      <form method="POST" action="/swaps/<%= request.swapRequestId %>/reject" style="display: inline;">
+                      <form method="POST" action="/swaps/<%= request.swapRequestId %>/reject?_method=PUT" style="display: inline;">
                         <button type="submit" class="btn waves-effect waves-light" style="background-color: #dc3545; padding: 0 12px; height: 32px; line-height: 32px; font-size: 0.8rem; border-radius: 999px; box-shadow: none;" onclick="return confirm('Reject this swap?')">
                           <i class="material-icons left" style="font-size: 14px;">close</i>
                           Reject
@@ -198,7 +207,7 @@
             </div>
 
             <div style="margin-top: 16px; text-align: center;">
-              <a href="/swaps/received" class="btn-secondary waves-effect waves-light" style="font-size: 0.9rem; padding: 0 16px; height: 36px; line-height: 34px;">
+              <a href="/swaps/incoming" class="btn-secondary waves-effect waves-light" style="font-size: 0.9rem; padding: 0 16px; height: 36px; line-height: 34px;">
                 View All Requests
               </a>
             </div>
@@ -257,7 +266,7 @@
 
                   <% if (request.status === 'pending') { %>
                     <div style="text-align: right;">
-                      <form method="POST" action="/swaps/<%= request.swapRequestId %>/cancel" style="display: inline;" onsubmit="return confirm('Cancel this swap request?')">
+                      <form method="POST" action="/swaps/<%= request.swapRequestId %>/cancel?_method=PUT" style="display: inline;" onsubmit="return confirm('Cancel this swap request?')">
                         <button type="submit" class="btn waves-effect waves-light" style="background-color: #6b7280; padding: 0 12px; height: 32px; line-height: 32px; font-size: 0.8rem; border-radius: 999px; box-shadow: none;">
                           <i class="material-icons left" style="font-size: 14px;">cancel</i>
                           Cancel Request
@@ -271,7 +280,7 @@
             </div>
 
             <div style="margin-top: 16px; text-align: center;">
-              <a href="/swaps/my-requests" class="btn-secondary waves-effect waves-light" style="font-size: 0.9rem; padding: 0 16px; height: 36px; line-height: 34px;">
+              <a href="/swaps/outgoing" class="btn-secondary waves-effect waves-light" style="font-size: 0.9rem; padding: 0 16px; height: 36px; line-height: 34px;">
                 View All My Requests
               </a>
             </div>
@@ -282,3 +291,39 @@
 
   </div>
 </section>
+
+<!-- Delete Confirmation Modal -->
+<% if (isOwner) { %>
+<div id="delete-modal" class="modal" style="border-radius: var(--radius); max-width: 500px;">
+  <div class="modal-content" style="padding: 24px;">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+      <i class="material-icons" style="color: hsl(var(--destructive)); font-size: 28px;">warning</i>
+      <h4 style="margin: 0; color: hsl(var(--foreground)); font-weight: 700;">Delete Item</h4>
+    </div>
+    <p style="color: hsl(var(--muted-foreground)); margin: 0 0 20px; line-height: 1.5;">
+      Are you sure you want to delete "<strong><%= item.title %></strong>"? This action cannot be undone and will also remove any pending swap requests for this item.
+    </p>
+  </div>
+  <div class="modal-footer" style="background-color: hsl(var(--muted)); padding: 16px 24px;">
+    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+      <a href="#!" class="modal-close btn-flat waves-effect waves-light" style="color: hsl(var(--muted-foreground));">Cancel</a>
+      <form method="POST" action="/items/<%= item.itemId %>?_method=DELETE" style="display: inline;">
+        <button type="submit" class="btn waves-effect waves-light" style="background-color: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); border-radius: 999px;">
+          <i class="material-icons left">delete</i>
+          Delete Item
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize modal
+    const modals = document.querySelectorAll('.modal');
+    if (window.M && modals.length) {
+      M.Modal.init(modals);
+    }
+  });
+</script>
+<% } %>
