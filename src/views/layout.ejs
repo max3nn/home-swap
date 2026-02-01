@@ -24,6 +24,8 @@
             --warning: 0 84.2% 60.2%;
             --warning-foreground: 210 40% 98%;
             --radius: 0.5rem;
+            --accept: 142.1 76.2% 36.3%;
+            --accept-foreground: 355.7 100% 97.3%;
         }
 
         * {
@@ -101,6 +103,28 @@
 
         .btn-primary:hover {
             background-color: hsl(222.2 47.4% 8%);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .btn-accept {
+            background-color: hsl(var(--accept));
+            color: hsl(var(--accept-foreground));
+            border: none;
+            border-radius: var(--radius);
+            padding: 0 24px;
+            height: 36px;
+            line-height: 36px;
+            font-weight: 500;
+            box-shadow: none;
+            text-transform: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-accept:hover {
+            background-color: hsl(142.1 76.2% 32%);
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 

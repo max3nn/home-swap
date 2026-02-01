@@ -430,7 +430,7 @@ router.put('/:swapRequestId/accept', async (req, res, next) => {
         }
 
         req.session.success = 'Swap request accepted successfully!';
-        res.redirect('/swaps/incoming');
+        res.redirect('/swaps/received');
     } catch (err) {
         return next(err);
     }
@@ -685,7 +685,7 @@ router.post('/:swapRequestId/reject', async (req, res, next) => {
         );
 
         req.session.success = 'Swap request rejected.';
-        res.redirect('/swaps/incoming');
+        res.redirect('/swaps/received');
     } catch (err) {
         return next(err);
     }

@@ -122,13 +122,13 @@
               <% if (request.status === 'pending') { %>
                 <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
                   <form method="POST" action="/swaps/<%= request.swapRequestId %>/accept?_method=PUT" style="display: inline;">
-                    <button type="submit" class="btn waves-effect waves-light" style="background-color: #28a745; border-radius: 999px; box-shadow: none;" onclick="return confirm('Are you sure you want to accept this swap request?')">
+                    <button type="submit" class="btn-accept waves-effect waves-light" onclick="return confirm('Are you sure you want to accept this swap request?')">
                       <i class="material-icons left">check</i>
                       Accept Swap
                     </button>
                   </form>
                   <form method="POST" action="/swaps/<%= request.swapRequestId %>/reject?_method=PUT" style="display: inline;">
-                    <button type="submit" class="btn waves-effect waves-light" style="background-color: #dc3545; border-radius: 999px; box-shadow: none;" onclick="return confirm('Are you sure you want to reject this swap request?')">
+                    <button type="submit" class="btn-warning waves-effect waves-light" style="background-color: #dc3545;" onclick="return confirm('Are you sure you want to reject this swap request?')">
                       <i class="material-icons left">close</i>
                       Reject
                     </button>
